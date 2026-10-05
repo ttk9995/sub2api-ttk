@@ -65,7 +65,11 @@ interface KeyTestRequest {
   errors: { interrupted: string; failed: string; incomplete: string; noCompaction: string }
 }
 
-/** Test through the public gateway so normal key permissions and billing apply. */
+/**
+ * Test through the public gateway so normal key permissions and billing apply.
+ * Provider-specific self-test headers can require their own plaza authorization;
+ * these benchmarks use ordinary inference instead.
+ */
 export async function runKeyTest(request: KeyTestRequest): Promise<void> {
   const { model, mode, platform, onText, errors } = request
   const catalogUrl = buildCodexModelCatalogUrl(request.baseUrl)
@@ -85,7 +89,6 @@ export async function runKeyTest(request: KeyTestRequest): Promise<void> {
     }
   } else {
     const template = templates[mode]
-    if (mode === 'pelican') headers['X-A6API-Self-Test-Kind'] = 'pelican'
     if (platform === 'gemini') {
       url = `${gatewayBase.slice(0, -'/v1'.length)}/v1beta/models/${encodeURIComponent(model)}:streamGenerateContent?alt=sse`
       body = {

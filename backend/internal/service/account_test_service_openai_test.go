@@ -602,18 +602,18 @@ func TestAccountTestService_OpenAIPelicanProbeUsesResponsesTemplate(t *testing.T
 		Extra: map[string]any{openai_compat.ExtraKeyResponsesSupported: false},
 	}
 
-	err := svc.testOpenAIAccountConnection(ctx, account, "gpt-6-astra", "", AccountTestModePelican)
+	err := svc.testOpenAIAccountConnection(ctx, account, "gpt-6.1-sol", "", AccountTestModePelican)
 	require.NoError(t, err)
 	require.Len(t, upstream.requests, 1)
 	req := upstream.requests[0]
 	require.Equal(t, "https://compat-upstream.example/v1/responses", req.URL.String())
 	require.Equal(t, "Bearer sk-test", req.Header.Get("Authorization"))
-	require.Equal(t, "pelican", req.Header.Get("X-A6API-Self-Test-Kind"))
+	require.Empty(t, req.Header.Get("X-A6API-Self-Test-Kind"), "ordinary benchmarks must not opt into a provider's restricted self-test endpoint")
 
 	body, err := io.ReadAll(req.Body)
 	require.NoError(t, err)
 	require.Len(t, gjson.ParseBytes(body).Map(), 4)
-	require.Equal(t, "gpt-6-astra", gjson.GetBytes(body, "model").String())
+	require.Equal(t, "gpt-6.1-sol", gjson.GetBytes(body, "model").String())
 	require.Equal(t, "Generate an SVG of a pelican riding a bicycle. Reply with the SVG code only.", gjson.GetBytes(body, "input").String())
 	require.Equal(t, float64(8192), gjson.GetBytes(body, "max_output_tokens").Float())
 	require.True(t, gjson.GetBytes(body, "stream").Bool())
@@ -662,6 +662,7 @@ func TestAccountTestService_OpenAIFixedBenchmarks(t *testing.T) {
 		wantPrompt string
 		wantTokens int64
 	}{
+		{AccountTestModePelican, "Generate an SVG of a pelican riding a bicycle. Reply with the SVG code only.", 8192},
 		{AccountTestModeKnowledge, "不联网 你现在的知识库是什么时候的", 1024},
 		{AccountTestModeCounting, "在一个黑色的袋子里放有三种口味的糖果", 8192},
 	}
@@ -717,7 +718,9 @@ func TestAccountTestService_OpenAIFixedBenchmarks(t *testing.T) {
 					require.Equal(t, "Bearer sk-test", upstream.lastReq.Header.Get("Authorization"))
 					require.Equal(t, tt.wantTokens, gjson.GetBytes(body, "max_output_tokens").Int())
 				}
-				if tt.mode == AccountTestModeKnowledge {
+				if tt.mode == AccountTestModePelican {
+					require.Equal(t, tt.wantPrompt, prompt)
+				} else if tt.mode == AccountTestModeKnowledge {
 					require.Equal(t, tt.wantPrompt, prompt)
 					require.Equal(t, "none", gjson.GetBytes(body, "tool_choice").String())
 				} else {

@@ -932,9 +932,9 @@ func (s *AccountTestService) testOpenAIAccountConnection(c *gin.Context, account
 
 	// 账号级请求头覆写：测试请求与真实转发保持一致的最终头
 	credentialAccount.ApplyHeaderOverrides(req.Header)
-	if mode == AccountTestModePelican {
-		req.Header.Set("X-A6API-Self-Test-Kind", "pelican")
-	}
+	// Benchmarks are ordinary inference requests. A provider-specific self-test
+	// marker can require authorization from that provider's own model plaza and
+	// reject an otherwise valid SVG request with self_test_kind_rejected.
 
 	// Get proxy URL
 	proxyURL := ""

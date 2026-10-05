@@ -48,7 +48,7 @@ beforeEach(() => {
   fetchMock.mockReset()
   vi.stubGlobal('fetch', fetchMock)
   fetchMock.mockImplementationOnce(async () => new Response(JSON.stringify({
-    data: [{ id: 'gpt-6-astra' }, { id: 'gpt-6-sol' }]
+    data: [{ id: 'gpt-6-astra' }, { id: 'gpt-6.1-sol' }]
   }), { headers: { 'Content-Type': 'application/json' } }))
 })
 
@@ -77,7 +77,7 @@ describe('ApiKeyTestModal', () => {
   ])('sends the selected model and %s template', async (mode, input, limit) => {
     const wrapper = mountModal()
     await flushPromises()
-    await wrapper.get('#key-test-model').setValue('gpt-6-sol')
+    await wrapper.get('#key-test-model').setValue('gpt-6.1-sol')
     await wrapper.get('#key-test-mode').setValue(mode)
     fetchMock.mockResolvedValueOnce(stream([
       { type: 'response.output_text.delta', delta: 'OK' },
@@ -88,10 +88,10 @@ describe('ApiKeyTestModal', () => {
     const [url, options] = fetchMock.mock.calls[1]
     const body = JSON.parse(options.body)
     expect(url).toBe('https://gateway.example/v1/responses')
-    expect(body).toMatchObject({ model: 'gpt-6-sol', max_output_tokens: limit, stream: true })
+    expect(body).toMatchObject({ model: 'gpt-6.1-sol', max_output_tokens: limit, stream: true })
     expect(body.input).toContain(input)
     expect(options.headers.Authorization).toBe('Bearer sk-user-test')
-    expect(options.headers['X-A6API-Self-Test-Kind']).toBe(mode === 'pelican' ? 'pelican' : undefined)
+    expect(options.headers['X-A6API-Self-Test-Kind']).toBeUndefined()
     expect(body.tool_choice).toBe(mode === 'knowledge' ? 'none' : undefined)
     expect(wrapper.text()).toContain('keys.test.completed')
   })
