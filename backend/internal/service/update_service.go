@@ -30,7 +30,8 @@ var (
 const (
 	updateCacheKey = "update_check_cache"
 	updateCacheTTL = 1200 // 20 minutes
-	githubRepo     = "Wei-Shaw/sub2api"
+	// This fork's binaries include custom features that upstream releases replace.
+	githubRepo = "ttk9995/sub2api-ttk"
 
 	// Security: allowed download domains for updates
 	allowedDownloadHost = "github.com"
@@ -374,6 +375,9 @@ func (s *UpdateService) fetchRollbackCandidates(ctx context.Context) ([]*GitHubR
 		if r == nil || r.Draft || r.Prerelease {
 			continue
 		}
+		if !s.acceptsRelease(r.TagName) {
+			continue
+		}
 		v := strings.TrimPrefix(r.TagName, "v")
 		if v == "" || seen[v] {
 			continue
@@ -403,6 +407,10 @@ func (s *UpdateService) fetchLatestRelease(ctx context.Context) (*UpdateInfo, er
 	release, err := s.githubClient.FetchLatestRelease(ctx, githubRepo)
 	if err != nil {
 		return nil, err
+	}
+
+	if !s.acceptsRelease(release.TagName) {
+		return nil, fmt.Errorf("release %q does not belong to the custom update channel", release.TagName)
 	}
 
 	latestVersion := strings.TrimPrefix(release.TagName, "v")
@@ -600,12 +608,17 @@ func (s *UpdateService) getFromCache(ctx context.Context) (*UpdateInfo, error) {
 	}
 
 	var cached struct {
+		Repository  string       `json:"repository"`
 		Latest      string       `json:"latest"`
 		ReleaseInfo *ReleaseInfo `json:"release_info"`
 		Timestamp   int64        `json:"timestamp"`
 	}
 	if err := json.Unmarshal([]byte(data), &cached); err != nil {
 		return nil, err
+	}
+	// The same Redis key may still contain an upstream update from before recovery.
+	if cached.Repository != githubRepo || !s.acceptsRelease(cached.Latest) {
+		return nil, fmt.Errorf("cached release does not belong to the custom update channel")
 	}
 
 	if time.Now().Unix()-cached.Timestamp > updateCacheTTL {
@@ -624,10 +637,12 @@ func (s *UpdateService) getFromCache(ctx context.Context) (*UpdateInfo, error) {
 
 func (s *UpdateService) saveToCache(ctx context.Context, info *UpdateInfo) {
 	cacheData := struct {
+		Repository  string       `json:"repository"`
 		Latest      string       `json:"latest"`
 		ReleaseInfo *ReleaseInfo `json:"release_info"`
 		Timestamp   int64        `json:"timestamp"`
 	}{
+		Repository:  githubRepo,
 		Latest:      info.LatestVersion,
 		ReleaseInfo: info.ReleaseInfo,
 		Timestamp:   time.Now().Unix(),
@@ -650,7 +665,35 @@ func compareVersions(current, latest string) int {
 			return 1
 		}
 	}
+	// Custom revisions are stable fork releases, not upstream prereleases.
+	// Compare the revision after the upstream version so fixes on the same base
+	// can be offered without claiming a newer upstream version.
+	currentRevision, _ := customReleaseRevision(current)
+	latestRevision, _ := customReleaseRevision(latest)
+	if currentRevision < latestRevision {
+		return -1
+	}
+	if currentRevision > latestRevision {
+		return 1
+	}
 	return 0
+}
+
+func customReleaseRevision(version string) (int, bool) {
+	_, revision, found := strings.Cut(version, "-ttk.")
+	if !found {
+		return 0, false
+	}
+	parsed, err := strconv.Atoi(revision)
+	return parsed, err == nil && parsed > 0
+}
+
+func (s *UpdateService) acceptsRelease(version string) bool {
+	// Once a custom build is installed, exclude historical upstream mirrors
+	// from both updates and downloadable rollback candidates.
+	_, customBuild := customReleaseRevision(s.currentVersion)
+	_, customRelease := customReleaseRevision(version)
+	return !customBuild || customRelease
 }
 
 func parseVersion(v string) [3]int {

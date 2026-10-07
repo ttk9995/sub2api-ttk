@@ -4,6 +4,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"testing"
 	"time"
@@ -31,13 +32,17 @@ type updateServiceGitHubClientStub struct {
 	release        *GitHubRelease
 	recentReleases []*GitHubRelease
 	recentErr      error
+	latestRepo     string
+	recentRepo     string
 }
 
-func (s *updateServiceGitHubClientStub) FetchLatestRelease(context.Context, string) (*GitHubRelease, error) {
+func (s *updateServiceGitHubClientStub) FetchLatestRelease(_ context.Context, repo string) (*GitHubRelease, error) {
+	s.latestRepo = repo
 	return s.release, nil
 }
 
-func (s *updateServiceGitHubClientStub) FetchRecentReleases(context.Context, string, int) ([]*GitHubRelease, error) {
+func (s *updateServiceGitHubClientStub) FetchRecentReleases(_ context.Context, repo string, _ int) ([]*GitHubRelease, error) {
+	s.recentRepo = repo
 	return s.recentReleases, s.recentErr
 }
 
@@ -184,4 +189,75 @@ func TestUpdateServiceRollbackToVersionAcceptsVPrefix(t *testing.T) {
 	require.Error(t, err)
 	require.NotErrorIs(t, err, ErrRollbackVersionNotAllowed)
 	require.Contains(t, err.Error(), "no compatible release found")
+}
+
+func TestUpdateServiceCustomBuildRejectsUpstreamMirror(t *testing.T) {
+	client := &updateServiceGitHubClientStub{release: &GitHubRelease{TagName: "v0.2.15"}}
+	svc := NewUpdateService(&updateServiceCacheStub{}, client, "0.2.14-ttk.1", "release")
+	info, err := svc.CheckUpdate(context.Background(), true)
+	require.NoError(t, err)
+	require.False(t, info.HasUpdate)
+	require.Contains(t, info.Warning, "custom update channel")
+	require.Equal(t, "ttk9995/sub2api-ttk", client.latestRepo)
+	require.ErrorIs(t, svc.PerformUpdate(context.Background()), ErrNoUpdateAvailable)
+}
+
+func TestUpdateServiceCustomRollbackExcludesUpstreamMirrors(t *testing.T) {
+	client := &updateServiceGitHubClientStub{recentReleases: []*GitHubRelease{
+		{TagName: "v0.2.14"},
+		{TagName: "v0.2.13"},
+		{TagName: "v0.2.14-ttk.1"},
+		{TagName: "v0.2.14-ttk.2"},
+		{TagName: "v0.2.13-ttk.1"},
+		{TagName: "v0.2.14-ttk.0"},
+	}}
+	svc := NewUpdateService(&updateServiceCacheStub{}, client, "0.2.14-ttk.2", "release")
+	versions, err := svc.ListRollbackVersions(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, []RollbackVersion{{Version: "0.2.14-ttk.1"}, {Version: "0.2.13-ttk.1"}}, versions)
+	require.Equal(t, "ttk9995/sub2api-ttk", client.recentRepo)
+	require.ErrorIs(t, svc.RollbackToVersion(context.Background(), "0.2.13"), ErrRollbackVersionNotAllowed)
+}
+
+func TestUpdateServiceCustomCacheIgnoresPreviousUpdateSource(t *testing.T) {
+	for _, repository := range []string{"", "Wei-Shaw/sub2api"} {
+		t.Run(repository, func(t *testing.T) {
+			data, err := json.Marshal(map[string]any{
+				"repository": repository, "latest": "0.2.99", "timestamp": time.Now().Unix(),
+			})
+			require.NoError(t, err)
+			cache := &updateServiceCacheStub{data: string(data)}
+			client := &updateServiceGitHubClientStub{release: &GitHubRelease{TagName: "v0.2.14-ttk.2"}}
+			svc := NewUpdateService(cache, client, "0.2.14-ttk.1", "release")
+			info, err := svc.CheckUpdate(context.Background(), false)
+			require.NoError(t, err)
+			require.False(t, info.Cached)
+			require.True(t, info.HasUpdate)
+			require.Equal(t, "0.2.14-ttk.2", info.LatestVersion)
+			info, err = svc.CheckUpdate(context.Background(), false)
+			require.NoError(t, err)
+			require.True(t, info.Cached)
+			require.True(t, info.HasUpdate)
+		})
+	}
+}
+
+func TestCompareVersionsCustomRevisions(t *testing.T) {
+	for _, test := range []struct {
+		current string
+		latest  string
+		want    int
+	}{
+		{"0.2.14-ttk.1", "0.2.14-ttk.2", -1},
+		{"v0.2.14-ttk.10", "0.2.14-ttk.2", 1},
+		{"0.2.14-ttk.1", "0.2.14-ttk.1", 0},
+		{"0.2.14-ttk.10", "0.2.15-ttk.1", -1},
+		{"0.2.15-ttk.1", "0.2.14-ttk.10", 1},
+		{"0.2.14", "0.2.14-ttk.1", -1},
+		{"0.2.14-rc1", "0.2.14", 0},
+	} {
+		t.Run(test.current+"/"+test.latest, func(t *testing.T) {
+			require.Equal(t, test.want, compareVersions(test.current, test.latest))
+		})
+	}
 }
