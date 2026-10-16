@@ -63,4 +63,45 @@ describe('model tag keyboard navigation', () => {
     expect((input.element as HTMLInputElement).value).toBe('')
     expect(pressTab(input.element).defaultPrevented).toBe(false)
   })
+
+  it('selects only listed candidates in candidate mode', async () => {
+    const wrapper = mount(ModelTagInput, {
+      props: { models: [], candidates: ['gpt-4.1', 'gpt-4o'] },
+    })
+    const input = wrapper.get('input')
+    await input.trigger('focus')
+    await input.setValue('gpt-4.1')
+    const event = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })
+    input.element.dispatchEvent(event)
+
+    expect(event.defaultPrevented).toBe(true)
+    expect(wrapper.emitted('update:models')).toEqual([[['gpt-4.1']]])
+    expect(wrapper.find('[data-testid="model-candidate-gpt-4o"]').exists()).toBe(false)
+  })
+
+  it('prevents form submission when candidate mode has no matching model', async () => {
+    const wrapper = mount(ModelTagInput, {
+      props: { models: [], candidates: ['gpt-4.1'] },
+    })
+    const input = wrapper.get('input')
+    await input.setValue('unknown-model')
+    const event = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })
+    input.element.dispatchEvent(event)
+
+    expect(event.defaultPrevented).toBe(true)
+    expect(wrapper.emitted('update:models')).toBeUndefined()
+  })
+
+  it('preserves selected legacy models while marking them unavailable', async () => {
+    const wrapper = mount(ModelTagInput, {
+      props: { models: ['retired-model'], candidates: ['gpt-4.1'] },
+    })
+    expect(wrapper.text()).toContain('admin.channels.form.modelCandidateUnavailable')
+    await wrapper.get('input').setValue('retired-model')
+    await wrapper.get('input').trigger('keydown.enter')
+    await wrapper.get('input').trigger('blur')
+
+    expect(wrapper.emitted('update:models')).toBeUndefined()
+    expect(wrapper.find('[data-testid="model-candidate-retired-model"]').exists()).toBe(false)
+  })
 })
