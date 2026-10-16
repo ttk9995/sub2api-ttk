@@ -76,7 +76,11 @@
             <ModelTagInput
               :models="entry.models"
               :platform="props.platform"
+              :candidates="modelCandidates"
+              :candidates-loading="modelCandidatesLoading"
+              :candidates-error="modelCandidatesError"
               @update:models="onModelsUpdate($event)"
+              @retry="emit('retryModelCandidates')"
               :placeholder="t('admin.channels.form.modelsPlaceholder')"
               class="mt-1"
             />
@@ -337,16 +341,23 @@ const props = withDefaults(defineProps<{
   enableTimePricing?: boolean
   enableTierMultipliers?: boolean
   enableGroupRateMultiplier?: boolean
+  modelCandidates?: string[]
+  modelCandidatesLoading?: boolean
+  modelCandidatesError?: boolean
 }>(), {
   hideTokenIntervals: false,
   enableTimePricing: false,
   enableTierMultipliers: false,
   enableGroupRateMultiplier: false,
+  modelCandidates: undefined,
+  modelCandidatesLoading: false,
+  modelCandidatesError: false,
 })
 
 const emit = defineEmits<{
   update: [entry: PricingFormEntry]
   remove: []
+  retryModelCandidates: []
 }>()
 
 // Collapse state: entries with existing models default to collapsed

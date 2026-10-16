@@ -1491,7 +1491,7 @@
             <span><span class="block text-sm text-gray-700 dark:text-gray-300">{{ t("admin.groups.modelPricing.longContext") }}</span><span class="block text-xs text-gray-500">{{ t("admin.groups.modelPricing.longContextHint") }}</span></span>
           </label>
           <div class="mt-3 space-y-2">
-            <PricingEntryCard v-for="(entry, index) in createForm.model_pricing" :key="index" :entry="entry" :platform="createForm.platform" hide-token-intervals enable-group-rate-multiplier @update="createForm.model_pricing[index] = $event" @remove="createForm.model_pricing.splice(index, 1)" />
+            <PricingEntryCard v-for="(entry, index) in createForm.model_pricing" :key="index" :entry="entry" :platform="createForm.platform" :model-candidates="createPricingModelCandidates" :model-candidates-loading="createModelAllowlistLoading" :model-candidates-error="createPricingModelCandidatesError" hide-token-intervals enable-group-rate-multiplier @update="createForm.model_pricing[index] = $event" @remove="createForm.model_pricing.splice(index, 1)" @retry-model-candidates="loadModelAllowlistCandidates('create', 0, createForm.platform)" />
           </div>
         </div>
 
@@ -3141,7 +3141,7 @@
             <span><span class="block text-sm text-gray-700 dark:text-gray-300">{{ t("admin.groups.modelPricing.longContext") }}</span><span class="block text-xs text-gray-500">{{ t("admin.groups.modelPricing.longContextHint") }}</span></span>
           </label>
           <div class="mt-3 space-y-2">
-            <PricingEntryCard v-for="(entry, index) in editForm.model_pricing" :key="index" :entry="entry" :platform="editForm.platform" hide-token-intervals enable-group-rate-multiplier @update="editForm.model_pricing[index] = $event" @remove="editForm.model_pricing.splice(index, 1)" />
+            <PricingEntryCard v-for="(entry, index) in editForm.model_pricing" :key="index" :entry="entry" :platform="editForm.platform" :model-candidates="editPricingModelCandidates" :model-candidates-loading="editModelAllowlistLoading" :model-candidates-error="editPricingModelCandidatesError" hide-token-intervals enable-group-rate-multiplier @update="editForm.model_pricing[index] = $event" @remove="editForm.model_pricing.splice(index, 1)" @retry-model-candidates="editingGroup && loadModelAllowlistCandidates('edit', editingGroup.id, editForm.platform)" />
           </div>
         </div>
 
@@ -4887,6 +4887,10 @@ const createModelAllowlistState = reactive(createInitialModelAllowlistState());
 const editModelAllowlistState = reactive(createInitialModelAllowlistState());
 const createModelAllowlistLoading = ref(false);
 const editModelAllowlistLoading = ref(false);
+const createPricingModelCandidates = ref<string[]>([]);
+const editPricingModelCandidates = ref<string[]>([]);
+const createPricingModelCandidatesError = ref(false);
+const editPricingModelCandidatesError = ref(false);
 type ReasoningEffortPolicyFieldsExpose = {
   validate: () => boolean;
   resetValidation: () => void;
@@ -5230,22 +5234,29 @@ const loadModelAllowlistCandidates = async (
   groupID: number,
   platform: GroupPlatform,
 ) => {
-  if (authStore.isSimpleMode) return;
   const request = { mode, groupID, platform };
   const requestID = modelAllowlistCandidatesTracker.next(request);
   const state = mode === "create" ? createModelAllowlistState : editModelAllowlistState;
   const loadingRef = mode === "create" ? createModelAllowlistLoading : editModelAllowlistLoading;
+  const pricingCandidates = mode === "create" ? createPricingModelCandidates : editPricingModelCandidates;
+  const pricingCandidatesError = mode === "create" ? createPricingModelCandidatesError : editPricingModelCandidatesError;
+  pricingCandidates.value = [];
+  pricingCandidatesError.value = false;
   loadingRef.value = true;
   try {
     const models = await adminAPI.groups.getModelAllowlistCandidates(groupID, platform);
     if (!modelAllowlistCandidatesTracker.isCurrent(requestID, request)) {
       return;
     }
-    setModelAllowlistCandidates(state, models);
+    pricingCandidates.value = models;
+    if (!authStore.isSimpleMode) {
+      setModelAllowlistCandidates(state, models);
+    }
   } catch (error) {
     if (!modelAllowlistCandidatesTracker.isCurrent(requestID, request)) {
       return;
     }
+    pricingCandidatesError.value = true;
     console.error("Error loading group models list candidates:", error);
   } finally {
     if (modelAllowlistCandidatesTracker.isCurrent(requestID, request)) {
