@@ -161,6 +161,17 @@ describe('PlazaModelPricingTable', () => {
     expect(text).toContain('0.8x')
   })
 
+  it('按模型倍率展示实付价格,并按比例叠加用户专属倍率', () => {
+    const model = tokenModel({ name: 'model-discounted', rate_multiplier: 0.3 })
+    const wrapper = mountTable([model], 1, 0.8)
+    const text = wrapper.text()
+
+    // 模型绝对倍率 0.3 在用户倍率 0.8 下按 0.3 × 0.8 / 1 = 0.24 生效。
+    expect(text).toContain('$0.72')
+    expect(text).toContain('0.24x')
+    expect(wrapper.find('td .line-through').text()).toBe('0.3x')
+  })
+
   it('模型按官方输出价从高到低排序,无官方价的排最后', () => {
     const expensive = tokenModel({
       name: 'model-expensive',

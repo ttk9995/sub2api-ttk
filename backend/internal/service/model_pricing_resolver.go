@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 	"maps"
+	"math"
 	"strings"
 )
 
@@ -165,6 +166,28 @@ func matchGroupModelPricing(group *Group, model string) *ChannelModelPricing {
 		}
 	}
 	return wildcard
+}
+
+// resolveGroupModelRateMultiplier returns the model-specific rate when one is
+// configured. The configured value is an absolute rate at the group's default
+// rate; user-specific and peak factors scale it by the same ratio as the
+// ordinary group rate. This keeps per-user discounts and peak pricing intact.
+func resolveGroupModelRateMultiplier(group *Group, model string, base float64) float64 {
+	if group == nil {
+		return base
+	}
+	pricing := matchGroupModelPricing(group, model)
+	if pricing == nil || pricing.RateMultiplier == nil {
+		return base
+	}
+	configured := *pricing.RateMultiplier
+	if configured < 0 || math.IsNaN(configured) || math.IsInf(configured, 0) {
+		return base
+	}
+	if group.RateMultiplier > 0 && base != group.RateMultiplier {
+		configured *= base / group.RateMultiplier
+	}
+	return configured
 }
 
 // resolveBasePricing 从 LiteLLM 或 Fallback 获取基础定价

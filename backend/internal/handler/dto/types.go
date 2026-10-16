@@ -96,8 +96,11 @@ type Group struct {
 	Description    string  `json:"description"`
 	Platform       string  `json:"platform"`
 	RateMultiplier float64 `json:"rate_multiplier"`
-	IsExclusive    bool    `json:"is_exclusive"`
-	Status         string  `json:"status"`
+	// ModelRates exposes only explicit per-model multiplier overrides to users.
+	// Pricing, channel and routing details remain admin-only.
+	ModelRates  []GroupModelRate `json:"model_rates,omitempty"`
+	IsExclusive bool             `json:"is_exclusive"`
+	Status      string           `json:"status"`
 
 	// I18n 名称与描述的各语言译文。只有管理端输出；用户侧接口经 Localized 把
 	// name/description 换成请求语言的版本后清空本字段。
@@ -164,6 +167,12 @@ type Group struct {
 
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+}
+
+// GroupModelRate is the user-visible per-model multiplier override for a group.
+type GroupModelRate struct {
+	Model          string  `json:"model"`
+	RateMultiplier float64 `json:"rate_multiplier"`
 }
 
 // AdminGroup 是管理员接口使用的 group DTO（包含敏感/内部字段）。

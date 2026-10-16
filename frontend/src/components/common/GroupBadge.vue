@@ -45,6 +45,8 @@ interface Props {
   peakEnd?: string
   peakRateMultiplier?: number
   showRate?: boolean
+  /** Hide the default 1x label in compact user-facing group summaries. */
+  hideDefaultRate?: boolean
   /** Allow full group names to wrap in layouts that have room for multiple lines. */
   truncate?: boolean
   daysRemaining?: number | null // 剩余天数（订阅类型时使用）
@@ -63,7 +65,8 @@ const props = withDefaults(defineProps<Props>(), {
   daysRemaining: null,
   userRateMultiplier: null,
   peakRateEnabled: false,
-  alwaysShowRate: false
+  alwaysShowRate: false,
+  hideDefaultRate: false
 })
 
 const { t } = useI18n()
@@ -108,6 +111,14 @@ const showLabel = computed(() => {
   // 订阅类型：显示天数或"订阅"
   if (isSubscription.value) return true
   // 标准类型：显示倍率（包括专属倍率）
+  if (
+    props.hideDefaultRate &&
+    !hasCustomRate.value &&
+    props.rateMultiplier !== undefined &&
+    Math.abs(Number(props.rateMultiplier) - 1) < 0.000001
+  ) {
+    return false
+  }
   return props.rateMultiplier !== undefined || hasCustomRate.value
 })
 

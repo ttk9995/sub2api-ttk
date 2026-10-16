@@ -42,6 +42,8 @@ export interface ChannelModelPricing {
   id?: number
   platform: string
   models: string[]
+  /** Optional per-model group rate override; ignored for channel pricing. */
+  rate_multiplier?: number | null
   billing_mode: BillingMode
   input_price: number | null
   output_price: number | null

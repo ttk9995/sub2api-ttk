@@ -580,6 +580,8 @@ export interface Group {
   description: string | null
   platform: GroupPlatform
   rate_multiplier: number
+  /** Explicit per-model multiplier overrides shown when selecting a group. */
+  model_rates?: GroupModelRate[]
   rpm_limit?: number // Group-level RPM cap (0 = unlimited); overrides user-level rpm_limit when set
   max_reasoning_effort?: string // Anthropic/OpenAI reasoning ceiling; empty means unlimited
   max_reasoning_effort_over_limit?: string // downgrade (default) or deny when over the ceiling
@@ -634,6 +636,11 @@ export interface Group {
   require_privacy_set: boolean
   created_at: string
   updated_at: string
+}
+
+export interface GroupModelRate {
+  model: string
+  rate_multiplier: number
 }
 
 export interface AdminGroup extends Group {

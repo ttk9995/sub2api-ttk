@@ -776,7 +776,8 @@ func (s *OpenAIGatewayService) calculateOpenAIImageCost(
 			Ctx: ctx, Model: billingModel, GroupID: &gid, Group: apiKey.Group,
 			RequestCount: result.ImageCount, SizeTier: sizeTier,
 			RateMultiplier: multiplier, Resolver: s.resolver, Resolved: resolved,
-			ReasoningEffort: optionalStringValue(result.ReasoningEffort),
+			SkipGroupModelRate: apiKey.Group != nil && apiKey.Group.ImageRateIndependent,
+			ReasoningEffort:    optionalStringValue(result.ReasoningEffort),
 		})
 		if err == nil {
 			return cost
@@ -837,7 +838,8 @@ func (s *OpenAIGatewayService) calculateOpenAIVideoCost(
 			Ctx: ctx, Model: billingModel, GroupID: &gid, Group: apiKey.Group,
 			UsageUnits: float64(videoCount * durationSeconds), SizeTier: resolution,
 			RateMultiplier: multiplier, Resolver: s.resolver, Resolved: resolved,
-			ReasoningEffort: optionalStringValue(result.ReasoningEffort),
+			SkipGroupModelRate: apiKey.Group != nil && apiKey.Group.VideoRateIndependent,
+			ReasoningEffort:    optionalStringValue(result.ReasoningEffort),
 		})
 		if err == nil {
 			return cost

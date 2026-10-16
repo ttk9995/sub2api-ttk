@@ -1491,7 +1491,7 @@
             <span><span class="block text-sm text-gray-700 dark:text-gray-300">{{ t("admin.groups.modelPricing.longContext") }}</span><span class="block text-xs text-gray-500">{{ t("admin.groups.modelPricing.longContextHint") }}</span></span>
           </label>
           <div class="mt-3 space-y-2">
-            <PricingEntryCard v-for="(entry, index) in createForm.model_pricing" :key="index" :entry="entry" :platform="createForm.platform" hide-token-intervals @update="createForm.model_pricing[index] = $event" @remove="createForm.model_pricing.splice(index, 1)" />
+            <PricingEntryCard v-for="(entry, index) in createForm.model_pricing" :key="index" :entry="entry" :platform="createForm.platform" hide-token-intervals enable-group-rate-multiplier @update="createForm.model_pricing[index] = $event" @remove="createForm.model_pricing.splice(index, 1)" />
           </div>
         </div>
 
@@ -3141,7 +3141,7 @@
             <span><span class="block text-sm text-gray-700 dark:text-gray-300">{{ t("admin.groups.modelPricing.longContext") }}</span><span class="block text-xs text-gray-500">{{ t("admin.groups.modelPricing.longContextHint") }}</span></span>
           </label>
           <div class="mt-3 space-y-2">
-            <PricingEntryCard v-for="(entry, index) in editForm.model_pricing" :key="index" :entry="entry" :platform="editForm.platform" hide-token-intervals @update="editForm.model_pricing[index] = $event" @remove="editForm.model_pricing.splice(index, 1)" />
+            <PricingEntryCard v-for="(entry, index) in editForm.model_pricing" :key="index" :entry="entry" :platform="editForm.platform" hide-token-intervals enable-group-rate-multiplier @update="editForm.model_pricing[index] = $event" @remove="editForm.model_pricing.splice(index, 1)" />
           </div>
         </div>
 
@@ -4385,6 +4385,7 @@ const supportsLivePlatform = (platform: string): boolean =>
 
 const emptyGroupPricing = (): PricingFormEntry => ({
   models: [],
+  rate_multiplier: null,
   billing_mode: "token",
   input_price: null,
   output_price: null,
@@ -4407,6 +4408,7 @@ const groupPricingFromAPI = (
 ): PricingFormEntry[] =>
   (pricing || []).map((entry) => ({
     models: entry.models || [],
+    rate_multiplier: entry.rate_multiplier ?? null,
     billing_mode: entry.billing_mode || "token",
     input_price: perTokenToMTok(entry.input_price),
     output_price: perTokenToMTok(entry.output_price),
@@ -4432,6 +4434,7 @@ const groupPricingToAPI = (
     .map((entry) => ({
       platform,
       models: entry.models,
+      rate_multiplier: toNullableNumber(entry.rate_multiplier),
       billing_mode: entry.billing_mode,
       input_price: mTokToPerToken(entry.input_price),
       output_price: mTokToPerToken(entry.output_price),

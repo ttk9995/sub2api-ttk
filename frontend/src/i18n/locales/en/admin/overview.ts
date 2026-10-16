@@ -1111,6 +1111,9 @@ export default {
       modelPricing: {
         title: 'Per-model group pricing',
         description: 'Overrides channel and built-in prices for matching models. Long-context tiers come from official presets — do not enter custom intervals. Use per-request tiers such as realtime, tts, and stt for audio.',
+        rateMultiplier: 'Model multiplier (optional)',
+        rateMultiplierPlaceholder: 'Use group multiplier',
+        rateMultiplierHint: 'Only this model uses the entered multiplier; blank keeps the group/user multiplier.',
         longContext: 'Enable long-context tier pricing',
         longContextHint: 'When checked, channel intervals or official preset tiers apply. Otherwise the first tier is used unless the account explicitly enables long-context billing.',
         add: 'Add model price'

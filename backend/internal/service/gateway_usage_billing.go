@@ -1168,7 +1168,8 @@ func (s *GatewayService) calculateImageCost(
 			Ctx: ctx, Model: billingModel, GroupID: &gid, Group: apiKey.Group,
 			RequestCount: result.ImageCount, SizeTier: sizeTier,
 			RateMultiplier: multiplier, Resolver: s.resolver, Resolved: resolved,
-			ReasoningEffort: optionalStringValue(result.ReasoningEffort),
+			SkipGroupModelRate: apiKey.Group != nil && apiKey.Group.ImageRateIndependent,
+			ReasoningEffort:    optionalStringValue(result.ReasoningEffort),
 		})
 		if err == nil {
 			return cost

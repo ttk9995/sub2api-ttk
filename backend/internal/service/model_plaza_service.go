@@ -21,8 +21,12 @@ type PlazaOfficialPricing struct {
 
 // PlazaModel 模型广场中单个模型条目：按实收口径合成的展示定价 + 官方参考价。
 type PlazaModel struct {
-	Name            string
-	Platform        string
+	Name     string
+	Platform string
+	// RateMultiplier is an optional per-model group rate override. It is
+	// expressed at the group's default rate; the UI combines it with any
+	// user-specific group rate before rendering.
+	RateMultiplier  *float64
 	Pricing         *ChannelModelPricing
 	OfficialPricing *PlazaOfficialPricing
 	// LongContextBasis 多档时的计价基准（整单 / 仅超出部分），单档为空。
@@ -232,6 +236,7 @@ func (s *ModelPlazaService) ListGroups(ctx context.Context) ([]PlazaGroup, error
 // 图片/按次模型（或阶梯表不可用时）沿用渠道定价与分组图片档位价。
 func (s *ModelPlazaService) fillDisplayPricing(ctx context.Context, m *PlazaModel, g *Group) {
 	if groupPricing := matchGroupModelPricing(g, m.Name); groupPricing != nil {
+		m.RateMultiplier = groupPricing.RateMultiplier
 		m.Pricing = groupPricing
 	}
 	if s.billingService != nil && s.resolver != nil {

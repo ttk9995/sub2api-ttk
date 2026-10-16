@@ -22,6 +22,7 @@ export interface IntervalFormEntry {
 
 export interface PricingFormEntry {
   models: string[]
+  rate_multiplier?: number | string | null
   billing_mode: BillingMode
   input_price: number | string | null
   output_price: number | string | null

@@ -185,6 +185,7 @@ func groupFromServiceBase(g *service.Group) Group {
 		I18n:                            g.I18n,
 		Platform:                        g.Platform,
 		RateMultiplier:                  g.RateMultiplier,
+		ModelRates:                      groupModelRatesFromService(g),
 		IsExclusive:                     g.IsExclusive,
 		Status:                          g.Status,
 		SubscriptionType:                g.SubscriptionType,
@@ -230,6 +231,41 @@ func groupFromServiceBase(g *service.Group) Group {
 		CreatedAt:                       g.CreatedAt,
 		UpdatedAt:                       g.UpdatedAt,
 	}
+}
+
+// groupModelRatesFromService keeps the public group response limited to the
+// explicit model-rate overrides users need when choosing a group. The full
+// pricing cards stay in the admin DTO because they contain operational prices.
+func groupModelRatesFromService(g *service.Group) []GroupModelRate {
+	if g == nil || len(g.ModelPricing) == 0 {
+		return nil
+	}
+
+	seen := make(map[string]struct{})
+	rates := make([]GroupModelRate, 0)
+	for _, pricing := range g.ModelPricing {
+		if pricing.RateMultiplier == nil {
+			continue
+		}
+		for _, rawModel := range pricing.Models {
+			model := strings.TrimSpace(rawModel)
+			if model == "" {
+				continue
+			}
+			if _, exists := seen[model]; exists {
+				continue
+			}
+			seen[model] = struct{}{}
+			rates = append(rates, GroupModelRate{
+				Model:          model,
+				RateMultiplier: *pricing.RateMultiplier,
+			})
+		}
+	}
+	if len(rates) == 0 {
+		return nil
+	}
+	return rates
 }
 
 func AccountFromServiceShallow(a *service.Account) *Account {

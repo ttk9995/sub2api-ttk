@@ -99,6 +99,22 @@
           </div>
         </div>
 
+        <div v-if="enableGroupRateMultiplier" class="mt-3 max-w-xs">
+          <label class="text-xs font-medium text-gray-500 dark:text-gray-400">
+            {{ t('admin.groups.modelPricing.rateMultiplier') }}
+          </label>
+          <input
+            :value="entry.rate_multiplier"
+            @input="emitField('rate_multiplier', ($event.target as HTMLInputElement).value)"
+            type="number"
+            step="any"
+            min="0"
+            class="input mt-1 text-sm"
+            :placeholder="t('admin.groups.modelPricing.rateMultiplierPlaceholder')"
+          />
+          <p class="input-hint">{{ t('admin.groups.modelPricing.rateMultiplierHint') }}</p>
+        </div>
+
         <!-- Token mode -->
         <div v-if="entry.billing_mode === 'token'">
           <!-- Default prices (fallback when no interval matches) -->
@@ -320,10 +336,12 @@ const props = withDefaults(defineProps<{
   hideTokenIntervals?: boolean
   enableTimePricing?: boolean
   enableTierMultipliers?: boolean
+  enableGroupRateMultiplier?: boolean
 }>(), {
   hideTokenIntervals: false,
   enableTimePricing: false,
   enableTierMultipliers: false,
+  enableGroupRateMultiplier: false,
 })
 
 const emit = defineEmits<{

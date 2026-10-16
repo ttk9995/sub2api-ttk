@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/Wei-Shaw/sub2api/internal/service"
+	"github.com/stretchr/testify/require"
 )
 
 // profitControlJSONFields 是分组利润控制的三个 JSON 字段。它们与同响应中的
@@ -72,4 +73,22 @@ func TestGroupFromServiceAdminIncludesProfitControl(t *testing.T) {
 			t.Errorf("管理员 DTO 应包含 %q", f)
 		}
 	}
+}
+
+func TestGroupFromServiceIncludesOnlyExplicitModelRates(t *testing.T) {
+	rate := 0.3
+	group := &service.Group{
+		ID:       8,
+		Name:     "model-rated",
+		Platform: service.PlatformOpenAI,
+		ModelPricing: []service.ChannelModelPricing{
+			{Models: []string{"gpt-5.6-luna"}, RateMultiplier: &rate},
+			{Models: []string{"gpt-5.6-mini"}},
+		},
+	}
+
+	public := GroupFromService(group)
+	require.Equal(t, []GroupModelRate{{Model: "gpt-5.6-luna", RateMultiplier: 0.3}}, public.ModelRates)
+	fields := marshalToMap(t, public)
+	require.NotContains(t, fields, "model_pricing")
 }

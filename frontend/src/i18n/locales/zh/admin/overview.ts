@@ -1108,6 +1108,9 @@ export default {
       modelPricing: {
         title: '分组逐模型定价',
         description: '匹配模型后覆盖渠道和内置价格。长上下文阶梯沿用官方/预设价卡，无需再手填区间。音频可用按次层级配置 realtime、tts、stt。',
+        rateMultiplier: '模型倍率（可选）',
+        rateMultiplierPlaceholder: '沿用分组倍率',
+        rateMultiplierHint: '填写后仅该模型使用此倍率；未填写则沿用分组/用户专属倍率。',
         longContext: '启用长上下文阶梯定价',
         longContextHint: '勾选后按渠道区间或官方预设阶梯计费；关闭后默认按第一档，账号显式开启时除外。',
         add: '添加模型价格'

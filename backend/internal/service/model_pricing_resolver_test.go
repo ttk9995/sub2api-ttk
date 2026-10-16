@@ -930,6 +930,47 @@ func TestResolve_GroupPricingOverridesChannel(t *testing.T) {
 	require.InDelta(t, 2e-6, resolved.BasePricing.OutputPricePerToken, 1e-12)
 }
 
+func TestResolveGroupModelRateMultiplier_PreservesUserRateRatio(t *testing.T) {
+	modelRate := 0.3
+	group := &Group{
+		RateMultiplier: 1.5,
+		ModelPricing: []ChannelModelPricing{{
+			Models:         []string{"claude-sonnet-4"},
+			RateMultiplier: &modelRate,
+		}},
+	}
+
+	// The configured model rate is absolute at the group's default rate. When
+	// a user-specific rate is already resolved, preserve that discount ratio.
+	require.InDelta(t, 0.3, resolveGroupModelRateMultiplier(group, "claude-sonnet-4", 1.5), 1e-12)
+	require.InDelta(t, 0.24, resolveGroupModelRateMultiplier(group, "claude-sonnet-4", 1.2), 1e-12)
+}
+
+func TestCalculateCostUnified_AppliesGroupModelRateMultiplier(t *testing.T) {
+	bs := newTestBillingServiceForResolver()
+	resolver := NewModelPricingResolver(nil, bs)
+	modelRate := 0.3
+	group := &Group{
+		RateMultiplier: 1.5,
+		ModelPricing: []ChannelModelPricing{{
+			Models:         []string{"claude-sonnet-4"},
+			RateMultiplier: &modelRate,
+		}},
+	}
+
+	cost, err := bs.CalculateCostUnified(CostInput{
+		Ctx:            context.Background(),
+		Model:          "claude-sonnet-4",
+		Group:          group,
+		Tokens:         UsageTokens{InputTokens: 1000},
+		RateMultiplier: 1.5,
+		Resolver:       resolver,
+	})
+	require.NoError(t, err)
+	require.InDelta(t, 1000*3e-6, cost.TotalCost, 1e-12)
+	require.InDelta(t, 1000*3e-6*0.3, cost.ActualCost, 1e-12)
+}
+
 func TestResolve_GroupLongContextUsesPresetNotCustomIntervals(t *testing.T) {
 	bs := newTestBillingServiceForResolver()
 	bs.fallbackPrices["claude-sonnet-4"].LongContextInputThreshold = 200000

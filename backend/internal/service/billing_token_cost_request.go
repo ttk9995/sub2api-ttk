@@ -18,6 +18,9 @@ type TokenCostRequest struct {
 	Resolver        *ModelPricingResolver
 	// Resolved 为调用方预先解析的定价（Resolver.Resolve 的结果），nil 表示未解析。
 	Resolved *ResolvedPricing
+	// SkipGroupModelRate keeps display probes on the pre-multiplier price basis
+	// and lets independent media rates bypass model-specific group rates.
+	SkipGroupModelRate bool
 }
 
 // CalculateTokenCostForRequest 按通用网关的路径选择计算 token 费用：
@@ -42,17 +45,18 @@ func (s *BillingService) CalculateTokenCostForRequest(req TokenCostRequest) (*Co
 
 func (s *BillingService) tokenCostInput(req TokenCostRequest, resolved *ResolvedPricing) CostInput {
 	input := CostInput{
-		Ctx:             req.Ctx,
-		Model:           req.Model,
-		Group:           req.Group,
-		Tokens:          req.Tokens,
-		RequestCount:    1,
-		RateMultiplier:  req.RateMultiplier,
-		PricingAt:       req.PricingAt,
-		ServiceTier:     req.ServiceTier,
-		ReasoningEffort: req.ReasoningEffort,
-		Resolver:        req.Resolver,
-		Resolved:        resolved,
+		Ctx:                req.Ctx,
+		Model:              req.Model,
+		Group:              req.Group,
+		Tokens:             req.Tokens,
+		RequestCount:       1,
+		RateMultiplier:     req.RateMultiplier,
+		PricingAt:          req.PricingAt,
+		ServiceTier:        req.ServiceTier,
+		ReasoningEffort:    req.ReasoningEffort,
+		Resolver:           req.Resolver,
+		Resolved:           resolved,
+		SkipGroupModelRate: req.SkipGroupModelRate,
 	}
 	if req.Group != nil {
 		gid := req.Group.ID
