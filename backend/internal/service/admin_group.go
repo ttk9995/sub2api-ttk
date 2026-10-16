@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"net/http"
 	"strings"
 	"time"
@@ -1160,6 +1161,14 @@ func normalizeGroupModelPricing(platform string, pricing []ChannelModelPricing) 
 		out[i] = pricing[i].Clone()
 		out[i].ID = 0
 		out[i].ChannelID = 0
+		if out[i].RateMultiplier != nil {
+			if *out[i].RateMultiplier < 0 || math.IsNaN(*out[i].RateMultiplier) || math.IsInf(*out[i].RateMultiplier, 0) {
+				return nil, infraerrors.BadRequest(
+					"INVALID_GROUP_MODEL_RATE_MULTIPLIER",
+					"group model rate_multiplier must be a finite number >= 0",
+				)
+			}
+		}
 		if out[i].TimePricing != nil && len(out[i].TimePricing.Periods) > 0 {
 			return nil, infraerrors.BadRequest(
 				"GROUP_MODEL_TIME_PRICING_UNSUPPORTED",

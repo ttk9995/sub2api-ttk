@@ -88,10 +88,14 @@ type AccountStatsPricingRule struct {
 
 // ChannelModelPricing 渠道模型定价条目
 type ChannelModelPricing struct {
-	ID                         int64               `json:"id,omitempty"`
-	ChannelID                  int64               `json:"channel_id,omitempty"`
-	Platform                   string              `json:"platform"` // 所属平台（anthropic/openai/gemini/...）
-	Models                     []string            `json:"models"`
+	ID        int64    `json:"id,omitempty"`
+	ChannelID int64    `json:"channel_id,omitempty"`
+	Platform  string   `json:"platform"` // 所属平台（anthropic/openai/gemini/...）
+	Models    []string `json:"models"`
+	// RateMultiplier is only interpreted for group model pricing entries. It
+	// overrides the group rate for matching models while preserving the
+	// existing group/channel pricing fields and JSON shape.
+	RateMultiplier             *float64            `json:"rate_multiplier,omitempty"`
 	BillingMode                BillingMode         `json:"billing_mode"`
 	InputPrice                 *float64            `json:"input_price"`
 	OutputPrice                *float64            `json:"output_price"`
@@ -212,6 +216,10 @@ func (p *ChannelModelPricing) GetTierByLabel(label string) *PricingInterval {
 // Clone 返回 ChannelModelPricing 的拷贝（切片和映射独立，价格指针字段共享，调用方只读安全）
 func (p ChannelModelPricing) Clone() ChannelModelPricing {
 	cp := p
+	if p.RateMultiplier != nil {
+		value := *p.RateMultiplier
+		cp.RateMultiplier = &value
+	}
 	cp.ReasoningEffortMultipliers = maps.Clone(p.ReasoningEffortMultipliers)
 	if p.Models != nil {
 		cp.Models = make([]string, len(p.Models))

@@ -41,4 +41,45 @@ describe('GroupOptionItem description layout', () => {
     expect(descriptionElement?.classes()).toContain('line-clamp-3')
     expect(wrapper.find('[title]').attributes('title')).toBe(description)
   })
+
+  it('shows explicit model rates and hides the default 1x tag', () => {
+    const wrapper = mount(GroupOptionItem, {
+      props: {
+        name: 'Example group',
+        platform: 'openai',
+        rateMultiplier: 1,
+        modelRates: [
+          { model: 'gpt-5.6-luna', rate_multiplier: 0.3 },
+          { model: 'gpt-5.6-mini', rate_multiplier: 1 },
+        ],
+      },
+      global: {
+        stubs: {
+          GroupBadge: true,
+        },
+      },
+    })
+
+    expect(wrapper.text()).toContain('gpt-5.6-luna')
+    expect(wrapper.text()).toContain('0.3x')
+    expect(wrapper.text()).not.toContain('gpt-5.6-mini')
+    expect(wrapper.text()).not.toContain('1x 倍率')
+  })
+
+  it('keeps the rate pill when a group has a non-default rate', () => {
+    const wrapper = mount(GroupOptionItem, {
+      props: {
+        name: 'Premium group',
+        platform: 'openai',
+        rateMultiplier: 1.5,
+      },
+      global: {
+        stubs: {
+          GroupBadge: true,
+        },
+      },
+    })
+
+    expect(wrapper.text()).toContain('1.5x admin.groups.rateLabel')
+  })
 })
