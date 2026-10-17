@@ -483,6 +483,8 @@ export default {
     serviceTierFlex: 'Flex',
     serviceTierStandard: 'Standard',
     rate: '倍率',
+    actualBillingMultiplier: '扣费倍率',
+    baseGroupMultiplier: '基础倍率',
     original: '原始',
     billed: '计费',
     noRecords: '未找到使用记录，请尝试调整筛选条件。',

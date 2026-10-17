@@ -478,6 +478,8 @@ export default {
     serviceTierFlex: 'Flex',
     serviceTierStandard: 'Standard',
     rate: 'Rate',
+    actualBillingMultiplier: 'Billed rate',
+    baseGroupMultiplier: 'Base rate',
     original: 'Original',
     billed: 'Billed',
     noRecords: 'No usage records found. Try adjusting your filters.',
