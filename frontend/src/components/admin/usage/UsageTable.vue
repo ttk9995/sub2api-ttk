@@ -226,6 +226,14 @@
                 </div>
               </div>
             </div>
+            <div
+              v-if="actualBillingMultiplier(row) !== null"
+              data-testid="actual-billing-multiplier"
+              class="mt-0.5 text-[11px] leading-tight text-blue-600 dark:text-blue-400"
+              :title="t('usage.actualBillingMultiplier')"
+            >
+              {{ t('usage.actualBillingMultiplier') }} {{ formatMultiplier(actualBillingMultiplier(row) ?? 1) }}x
+            </div>
             <div v-if="showAccountBilling && row.account_rate_multiplier != null" class="mt-0.5 text-[11px] text-orange-500 dark:text-orange-400">
               A ${{ accountBilled(row).toFixed(6) }}
             </div>
@@ -498,8 +506,12 @@
             <span class="text-gray-400">{{ t('usage.serviceTier') }}</span>
             <span class="font-semibold text-cyan-300">{{ getUsageServiceTierLabel(tooltipData?.service_tier, t) }}</span>
           </div>
-          <div class="flex items-center justify-between gap-6">
-            <span class="text-gray-400">{{ t('usage.rate') }}</span>
+          <div v-if="actualBillingMultiplier(tooltipData) !== null" class="flex items-center justify-between gap-6">
+            <span class="text-gray-400">{{ t('usage.actualBillingMultiplier') }}</span>
+            <span class="font-semibold text-blue-400">{{ formatMultiplier(actualBillingMultiplier(tooltipData) ?? 1) }}x</span>
+          </div>
+          <div v-if="isNonDefaultMultiplier(tooltipData?.rate_multiplier)" class="flex items-center justify-between gap-6">
+            <span class="text-gray-400">{{ t('usage.baseGroupMultiplier') }}</span>
             <span class="font-semibold text-blue-400">{{ formatMultiplier(tooltipData?.rate_multiplier ?? 1) }}x</span>
           </div>
           <div class="flex items-center justify-between gap-6">
@@ -589,6 +601,19 @@ import Icon from '@/components/icons/Icon.vue'
 import { fetchBatch, getEntry } from '@/utils/ipGeoLookup'
 import type { AdminUsageLog } from '@/types'
 import type { Column } from '@/components/common/types'
+
+function actualBillingMultiplier(row: Pick<AdminUsageLog, 'actual_cost' | 'total_cost'> | null | undefined): number | null {
+  if (!row || !Number.isFinite(row.total_cost) || row.total_cost <= 0 || !Number.isFinite(row.actual_cost)) {
+    return null
+  }
+
+  const multiplier = row.actual_cost / row.total_cost
+  return isNonDefaultMultiplier(multiplier) ? multiplier : null
+}
+
+function isNonDefaultMultiplier(value: number | null | undefined): value is number {
+  return value != null && Number.isFinite(value) && Math.abs(value - 1) >= 0.000001
+}
 
 interface Props {
   data: AdminUsageLog[]

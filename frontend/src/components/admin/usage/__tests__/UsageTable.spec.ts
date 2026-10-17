@@ -49,6 +49,8 @@ const messages: Record<string, string> = {
   'usage.serviceTierFlex': 'Flex',
   'usage.serviceTierStandard': 'Standard',
   'usage.rate': 'Rate',
+  'usage.actualBillingMultiplier': 'Billed rate',
+  'usage.baseGroupMultiplier': 'Base rate',
   'usage.accountMultiplier': 'Account rate',
   'usage.original': 'Original',
   'usage.userBilled': 'User billed',
@@ -269,19 +271,52 @@ describe('admin UsageTable tooltip', () => {
     expect(wrapper.get('[data-testid="native-compaction-badge"]').text()).toBe('Compaction')
   })
 
-  it.each([
-    [0, '0.0x'],
-    [0.5, '0.50x'],
-    [undefined, '1.00x'],
-  ])('shows the stored user rate %s in cost details', async (rate, expected) => {
+  it('shows non-default actual and base multipliers in the fee cell and tooltip', async () => {
     const wrapper = mount(UsageTable, {
-      props: { data: [{ ...baseImageRow, rate_multiplier: rate }], loading: false, columns: [] },
+      props: {
+        data: [{ ...baseImageRow, total_cost: 0.0847124, actual_cost: 0.01694248, rate_multiplier: 0.5 }],
+        loading: false,
+        columns: [],
+      },
       global: { stubs: { DataTable: DataTableStub, EmptyState: true, Icon: true, Teleport: true } },
     })
+    expect(wrapper.get('[data-testid="actual-billing-multiplier"]').text()).toContain('0.20x')
+
     const triggers = wrapper.findAll('.group.relative')
     await triggers[triggers.length - 1].trigger('mouseenter')
-    const rateLabel = wrapper.get('.fixed').findAll('span').find(span => span.text() === 'Rate')!
-    expect(rateLabel.element.parentElement?.textContent).toContain(expected)
+    const tooltipText = wrapper.get('.fixed').text()
+    expect(tooltipText).toContain('Billed rate')
+    expect(tooltipText).toContain('0.20x')
+    expect(tooltipText).toContain('Base rate')
+    expect(tooltipText).toContain('0.50x')
+    wrapper.unmount()
+  })
+
+  it('hides actual and base multipliers when both are the default 1x', async () => {
+    const wrapper = mount(UsageTable, {
+      props: {
+        data: [{ ...baseImageRow, total_cost: 0.1, actual_cost: 0.1, rate_multiplier: 1 }],
+        loading: false,
+        columns: [],
+      },
+      global: { stubs: { DataTable: DataTableStub, EmptyState: true, Icon: true, Teleport: true } },
+    })
+
+    expect(wrapper.find('[data-testid="actual-billing-multiplier"]').exists()).toBe(false)
+    const triggers = wrapper.findAll('.group.relative')
+    await triggers[triggers.length - 1].trigger('mouseenter')
+    const tooltipText = wrapper.get('.fixed').text()
+    expect(tooltipText).not.toContain('Billed rate')
+    expect(tooltipText).not.toContain('Base rate')
+    wrapper.unmount()
+  })
+
+  it('does not show an inferred multiplier when the original charge is zero', () => {
+    const wrapper = mount(UsageTable, {
+      props: { data: [{ ...baseImageRow, total_cost: 0, actual_cost: 0 }], loading: false, columns: [] },
+      global: { stubs: { DataTable: DataTableStub, EmptyState: true, Icon: true, Teleport: true } },
+    })
+    expect(wrapper.find('[data-testid="actual-billing-multiplier"]').exists()).toBe(false)
     wrapper.unmount()
   })
 
@@ -324,7 +359,8 @@ describe('admin UsageTable tooltip', () => {
     const text = wrapper.text()
     expect(text).toContain('Service tier')
     expect(text).toContain('Fast')
-    expect(text).toContain('Rate')
+    expect(text).not.toContain('Billed rate')
+    expect(text).not.toContain('Base rate')
     expect(text).toContain('1.00x')
     expect(text).toContain('Account rate')
     expect(text).toContain('User billed')
