@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/Wei-Shaw/sub2api/internal/config"
 	"github.com/stretchr/testify/require"
@@ -1990,6 +1991,13 @@ func TestNewModelPricingCatalogFallbackAndContext(t *testing.T) {
 			"claude-opus-5": {InputCostPerToken: 5e-6, OutputCostPerToken: 25e-6},
 		}}),
 		"catalog": NewBillingService(&config.Config{}, catalog),
+		"stale remote catalog": NewBillingService(&config.Config{}, newStubPricingServiceFromJSON(t, `{
+			"gpt-6.1-sol": {"litellm_provider": "openai", "mode": "chat",
+				"input_cost_per_token": 2e-6, "output_cost_per_token": 10e-6,
+				"cache_read_input_token_cost": 0.1e-6, "cache_creation_input_token_cost": 2.5e-6,
+				"input_cost_per_token_above_272k_tokens": 4e-6,
+				"output_cost_per_token_above_272k_tokens": 15e-6}
+		}`)),
 	}
 	for source, svc := range sources {
 		for _, tc := range []struct {
@@ -2001,13 +2009,17 @@ func TestNewModelPricingCatalogFallbackAndContext(t *testing.T) {
 			{"gpt-6-luna", 0.1e-6, 0.5e-6, 0.125e-6, 0.01e-6},
 		} {
 			t.Run(source+"/"+tc.model, func(t *testing.T) {
-				for _, n := range []int{271999, 272000, 272001} {
+				threshold := 272000
+				if tc.model == "gpt-6.1-sol" {
+					threshold = 500000
+				}
+				for _, n := range []int{271999, 272000, 272001, 499999, 500000, 500001} {
 					for tier, mult := range map[string]float64{"": 1, "priority": 2, "fast": 2, "flex": 0.5} {
 						tokens := UsageTokens{InputTokens: n - 3000, CacheReadTokens: 2000, CacheCreationTokens: 1000, OutputTokens: 500}
 						cost, err := svc.CalculateCostWithServiceTier(tc.model, tokens, 1, tier)
 						require.NoError(t, err)
 						im, om := 1.0, 1.0
-						if n > 272000 {
+						if n > threshold {
 							im = 2
 							om = 1.5
 						}
@@ -2016,7 +2028,7 @@ func TestNewModelPricingCatalogFallbackAndContext(t *testing.T) {
 						require.InDelta(t, 2000*tc.read*im*mult, cost.CacheReadCost, 1e-10)
 						require.InDelta(t, 500*tc.output*om*mult, cost.OutputCost, 1e-10)
 						require.InDelta(t, cost.InputCost+cost.OutputCost+cost.CacheCreationCost+cost.CacheReadCost, cost.TotalCost, 1e-10)
-						require.Equal(t, n > 272000, cost.LongContextBillingApplied)
+						require.Equal(t, n > threshold, cost.LongContextBillingApplied)
 					}
 				}
 			})
@@ -2082,6 +2094,44 @@ func TestNewModelPricingCatalogFallbackAndContext(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+func TestGPT61SolDefaultLongContextThresholdPolicy(t *testing.T) {
+	svc := newTestBillingService()
+	for _, tc := range []struct {
+		name, model    string
+		threshold      int
+		defaultPricing bool
+		wantThreshold  int
+	}{
+		{"stale catalog", "gpt-6.1-sol", 272000, true, 500000},
+		{"effort alias", "openai/gpt-6.1-sol-max", 272000, true, 500000},
+		{"compact alias", "gpt-6.1-sol-openai-compact", 272000, true, 500000},
+		{"already migrated", "gpt-6.1-sol", 500000, true, 500000},
+		{"disabled ladder", "gpt-6.1-sol", 0, true, 0},
+		{"different explicit threshold", "gpt-6.1-sol", 600000, true, 600000},
+		{"channel pricing", "gpt-6.1-sol", 272000, false, 272000},
+		{"other model", "gpt-6-sol", 272000, true, 272000},
+		{"similar model name", "gpt-6.1-sol-preview", 272000, true, 272000},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			pricing := &ModelPricing{InputPricePerToken: 2e-6, OutputPricePerToken: 10e-6,
+				LongContextInputThreshold: tc.threshold, LongContextInputMultiplier: 2, LongContextOutputMultiplier: 1.5}
+			got := svc.applyModelSpecificPricingPolicyEx(tc.model, pricing, tc.defaultPricing, time.Time{})
+			require.Equal(t, tc.wantThreshold, got.LongContextInputThreshold)
+			require.Equal(t, tc.threshold, pricing.LongContextInputThreshold, "共享价卡不得被原地修改")
+			require.Equal(t, pricing.InputPricePerToken, got.InputPricePerToken)
+			require.Equal(t, pricing.OutputPricePerToken, got.OutputPricePerToken)
+			require.Equal(t, pricing.LongContextInputMultiplier, got.LongContextInputMultiplier)
+			require.Equal(t, pricing.LongContextOutputMultiplier, got.LongContextOutputMultiplier)
+			if !tc.defaultPricing {
+				// 渠道自定义区间继续在旧边界生效，不被默认价卡迁移覆盖。
+				cost := svc.computeTokenBreakdown(got, UsageTokens{InputTokens: 300000}, 1, "", true)
+				require.True(t, cost.LongContextBillingApplied)
+				require.InDelta(t, 1.2, cost.TotalCost, 1e-12)
+			}
+		})
 	}
 }
 
