@@ -378,6 +378,34 @@ func TestResolveContextPricingSchedule_Scenarios(t *testing.T) {
 	}
 }
 
+func TestResolveContextPricingSchedule_GPT61Sol500k(t *testing.T) {
+	for _, staleCatalog := range []bool{false, true} {
+		var catalog *PricingService
+		if staleCatalog {
+			catalog = newStubPricingServiceFromJSON(t, `{
+				"gpt-6.1-sol": {"litellm_provider":"openai","input_cost_per_token":2e-6,"output_cost_per_token":10e-6,
+				"cache_creation_input_token_cost":2.5e-6,"cache_read_input_token_cost":0.1e-6,
+				"input_cost_per_token_above_272k_tokens":4e-6,"output_cost_per_token_above_272k_tokens":15e-6}
+			}`)
+		}
+		bs := NewBillingService(&config.Config{}, catalog)
+		resolver := NewModelPricingResolver(nil, bs)
+		for _, model := range []string{"gpt-6.1-sol", "openai/gpt-6.1-sol-max", "gpt-6.1-sol-openai-compact"} {
+			for _, group := range []*Group{nil, enabledGroup(PlatformOpenAI)} {
+				sched, err := bs.ResolveContextPricingSchedule(context.Background(), resolver, ContextPricingScheduleInput{
+					Model: model, Group: group, Platform: PlatformOpenAI,
+				})
+				require.NoError(t, err)
+				require.NotNil(t, sched)
+				require.Len(t, sched.Tiers, 2)
+				p := testPtrFloat64
+				requireTier(t, sched.Tiers[0], 0, intPtr(500000), "≤500K", p(2e-6), p(10e-6), p(2.5e-6), p(0.1e-6))
+				requireTier(t, sched.Tiers[1], 500000, nil, ">500K", p(4e-6), p(15e-6), p(5e-6), p(0.2e-6))
+			}
+		}
+	}
+}
+
 func TestResolveContextPricingSchedule_NilResolver(t *testing.T) {
 	bs := NewBillingService(&config.Config{}, nil)
 	sched, err := bs.ResolveContextPricingSchedule(context.Background(), nil, ContextPricingScheduleInput{Model: "gpt-5.4"})

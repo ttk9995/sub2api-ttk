@@ -590,7 +590,7 @@ func (s *BillingService) initFallbackPricing() {
 		LongContextOutputMultiplier:        1.5,
 	}
 
-	// GPT-6 Sol/Luna official rates, 2026-09-22.
+	// GPT-6.1 Sol：本项目的 API Key 上游同样来自订阅，默认阶梯从 500k 之后生效。
 	s.fallbackPrices["gpt-6.1-sol"] = &ModelPricing{
 		InputPricePerToken:                 2e-6,
 		InputPricePerTokenPriority:         4e-6,
@@ -601,10 +601,11 @@ func (s *BillingService) initFallbackPricing() {
 		CacheReadPricePerToken:             0.1e-6,
 		CacheReadPricePerTokenPriority:     0.2e-6,
 		CacheCreationPriceExplicit:         true,
-		LongContextInputThreshold:          272_000,
+		LongContextInputThreshold:          500_000,
 		LongContextInputMultiplier:         2,
 		LongContextOutputMultiplier:        1.5,
 	}
+	// GPT-6 Sol/Luna official rates, 2026-09-22.
 	s.fallbackPrices["gpt-6-sol"] = &ModelPricing{
 		InputPricePerToken:                 2e-6,
 		InputPricePerTokenPriority:         4e-6,
@@ -1894,8 +1895,8 @@ func (s *BillingService) calculateCostInternalWithPolicy(
 // applyModelSpecificPricingPolicy 对目录数据做模型特定修正：DeepSeek 官方价
 // 强制覆盖；GPT-5.6 缺 cache_write 价时按官方规则补 1.25 倍输入价；Fast/priority
 // 档按业务倍率改写（本地/远程目录的 priority 价可能沿用官方旧口径）。长上下文
-// 阶梯不在此处补齐：一律由目录数据（above_XXXk 折算或显式 long_context_* 字段）
-// 驱动。强制 DeepSeek 官方价且无显式计费时点（pro→Flash 切换按当前时刻判定），
+// 阶梯由目录数据驱动；GPT-6.1 Sol 的旧 272k 默认阶梯按本项目订阅业务修正为
+// 500k，防止远程价表刷新回退。强制 DeepSeek 官方价且无显式计费时点（pro→Flash 切换按当前时刻判定），
 // 供无既有时点的策略修正场景与测试使用；计费/展示主路径分别经
 // calculateTokenCost 与 getModelPricingAt 显式传时点，分组/渠道自定义定价
 // 用 applyModelSpecificPricingPolicyEx 关闭强制，保留运营者配置。
@@ -1939,15 +1940,21 @@ func (s *BillingService) applyModelSpecificPricingPolicyEx(model string, pricing
 		return &cloned
 	}
 	normalized := normalizeKnownOpenAICodexModel(model)
+	// 这里的 forceDeepSeekRates 同时区分默认价卡和渠道/分组自定义价格。
+	// 仅迁移 GPT-6.1 Sol 的旧阈值，不补齐已关闭/缺失的阶梯，不改其他显式阈值。
+	needsGPT61SolContextThreshold := forceDeepSeekRates && openai.IsGPT61SolModelSpelling(normalized) && pricing.LongContextInputThreshold == 272_000
 	usesCacheWritePremium := isOpenAIGPT56Model(normalized) || (openai.IsGPT6SolOrLunaModelSpelling(normalized) || openai.IsGPT61SolModelSpelling(normalized))
 	needsCacheCreationPolicy := usesCacheWritePremium && !pricing.CacheCreationPriceExplicit && (pricing.CacheCreationPricePerToken <= 0 ||
 		(pricing.InputPricePerTokenPriority > 0 && pricing.CacheCreationPricePerTokenPriority <= 0))
 	fastRatio := openAIModelFastPricingRatio(normalized)
 	needsOpus55FastMultiplier := claude.IsOpus55(model) && pricing.FastMultiplier == nil
-	if !needsCacheCreationPolicy && fastRatio <= 0 && !needsOpus55FastMultiplier {
+	if !needsCacheCreationPolicy && fastRatio <= 0 && !needsOpus55FastMultiplier && !needsGPT61SolContextThreshold {
 		return pricing
 	}
 	cloned := *pricing
+	if needsGPT61SolContextThreshold {
+		cloned.LongContextInputThreshold = 500_000
+	}
 	if isOpenAIGPT6AstraModel(normalized) {
 		cloned.UltrafastMultiplier = 6
 	}
