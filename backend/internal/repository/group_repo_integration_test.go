@@ -119,6 +119,24 @@ func (s *GroupRepoSuite) TestCreate() {
 	got, err := s.repo.GetByID(s.ctx, group.ID)
 	s.Require().NoError(err, "GetByID")
 	s.Require().Equal("test-create", got.Name)
+	s.Require().False(got.GPT61SolLongContextEnabled)
+	s.Require().Equal(500000, got.GPT61SolLongContextThreshold)
+
+	got.Platform = service.PlatformOpenAI
+	got.GPT61SolLongContextEnabled = true
+	got.GPT61SolLongContextThreshold = 640000
+	s.Require().NoError(s.repo.Update(s.ctx, got))
+	updated, err := s.repo.GetByIDLite(s.ctx, got.ID)
+	s.Require().NoError(err)
+	s.Require().True(updated.GPT61SolLongContextEnabled)
+	s.Require().Equal(640000, updated.GPT61SolLongContextThreshold)
+
+	updated.GPT61SolLongContextEnabled = false
+	s.Require().NoError(s.repo.Update(s.ctx, updated))
+	disabled, err := s.repo.GetByID(s.ctx, got.ID)
+	s.Require().NoError(err)
+	s.Require().False(disabled.GPT61SolLongContextEnabled)
+	s.Require().Equal(640000, disabled.GPT61SolLongContextThreshold)
 }
 
 func (s *GroupRepoSuite) TestCreateFromSourcePreservesPriorityAndFiltersIneligibleAccounts() {
