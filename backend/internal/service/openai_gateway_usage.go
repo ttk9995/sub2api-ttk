@@ -754,6 +754,12 @@ func (s *OpenAIGatewayService) calculateOpenAIRecordUsageTokenCost(
 			DisableModelLongContextPricing: modelLongContextExempt,
 		})
 	}
+	if apiKey.Group == nil || !apiKey.Group.GPT61SolLongContextEnabled {
+		return s.billingService.calculateCostWithServiceTierPolicy(
+			billingModel, tokens, multiplier, serviceTier,
+			(longContextBillingGate == nil || *longContextBillingGate) && !modelLongContextExempt,
+		)
+	}
 	return s.billingService.CalculateCostUnified(CostInput{
 		Ctx: ctx, Model: billingModel, Group: apiKey.Group, Tokens: tokens,
 		RateMultiplier: multiplier, ServiceTier: serviceTier,
