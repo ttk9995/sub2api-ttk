@@ -365,6 +365,8 @@ func TestAPIContracts(t *testing.T) {
 						"weekly_limit_usd": null,
 						"monthly_limit_usd": null,
 						"long_context_pricing_enabled": false,
+						"gpt61_sol_long_context_enabled": false,
+						"gpt61_sol_long_context_threshold": 0,
 						"image_price_1k": null,
 						"image_price_2k": null,
 						"image_price_4k": null,
