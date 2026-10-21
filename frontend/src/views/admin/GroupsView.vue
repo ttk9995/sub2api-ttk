@@ -1490,6 +1490,12 @@
             <input v-model="createForm.long_context_pricing_enabled" type="checkbox" class="mt-0.5" />
             <span><span class="block text-sm text-gray-700 dark:text-gray-300">{{ t("admin.groups.modelPricing.longContext") }}</span><span class="block text-xs text-gray-500">{{ t("admin.groups.modelPricing.longContextHint") }}</span></span>
           </label>
+          <GroupLongContextPricingField
+            v-if="supportsGroupLongContextPricing(createForm.platform)"
+            v-model:enabled="createForm.gpt61_sol_long_context_enabled"
+            v-model:threshold="createForm.gpt61_sol_long_context_threshold"
+            data-testid="create-long-context-threshold"
+          />
           <div class="mt-3 space-y-2">
             <PricingEntryCard v-for="(entry, index) in createForm.model_pricing" :key="index" :entry="entry" :platform="createForm.platform" :model-candidates="createPricingModelCandidates" :model-candidates-loading="createModelAllowlistLoading" :model-candidates-error="createPricingModelCandidatesError" hide-token-intervals enable-group-rate-multiplier @update="createForm.model_pricing[index] = $event" @remove="createForm.model_pricing.splice(index, 1)" @retry-model-candidates="loadModelAllowlistCandidates('create', 0, createForm.platform)" />
           </div>
@@ -3140,6 +3146,12 @@
             <input v-model="editForm.long_context_pricing_enabled" type="checkbox" class="mt-0.5" />
             <span><span class="block text-sm text-gray-700 dark:text-gray-300">{{ t("admin.groups.modelPricing.longContext") }}</span><span class="block text-xs text-gray-500">{{ t("admin.groups.modelPricing.longContextHint") }}</span></span>
           </label>
+          <GroupLongContextPricingField
+            v-if="supportsGroupLongContextPricing(editForm.platform)"
+            v-model:enabled="editForm.gpt61_sol_long_context_enabled"
+            v-model:threshold="editForm.gpt61_sol_long_context_threshold"
+            data-testid="edit-long-context-threshold"
+          />
           <div class="mt-3 space-y-2">
             <PricingEntryCard v-for="(entry, index) in editForm.model_pricing" :key="index" :entry="entry" :platform="editForm.platform" :model-candidates="editPricingModelCandidates" :model-candidates-loading="editModelAllowlistLoading" :model-candidates-error="editPricingModelCandidatesError" hide-token-intervals enable-group-rate-multiplier @update="editForm.model_pricing[index] = $event" @remove="editForm.model_pricing.splice(index, 1)" @retry-model-candidates="editingGroup && loadModelAllowlistCandidates('edit', editingGroup.id, editForm.platform)" />
           </div>
@@ -4301,6 +4313,12 @@ import PlatformIcon from "@/components/common/PlatformIcon.vue";
 import { platformLabel } from "@/utils/platformColors";
 import Icon from "@/components/icons/Icon.vue";
 import GroupI18nField from "@/components/admin/group/GroupI18nField.vue";
+import GroupLongContextPricingField from "@/components/admin/group/GroupLongContextPricingField.vue";
+import {
+  supportsGroupLongContextPricing,
+  isValidGroupContextThreshold,
+  groupLongContextPricingPayload,
+} from "./groupsLongContextPricing";
 import GroupRateMultipliersModal from "@/components/admin/group/GroupRateMultipliersModal.vue";
 import GroupRPMOverridesModal from "@/components/admin/group/GroupRPMOverridesModal.vue";
 import GroupCapacityBadge from "@/components/common/GroupCapacityBadge.vue";
@@ -4364,6 +4382,7 @@ import {
   type ReasoningEffortMappingRow,
 } from "./groupsReasoningEffort";
 import {
+  defaultAllowImageGenerationForPlatform,
   getDefaultImagePreviewPrice,
   getDefaultVideoPreviewPrice,
   getImagePricePlaceholder,
@@ -4959,6 +4978,8 @@ const createForm = reactive({
   weekly_limit_usd: null as number | null,
   monthly_limit_usd: null as number | null,
   long_context_pricing_enabled: true,
+  gpt61_sol_long_context_enabled: false,
+  gpt61_sol_long_context_threshold: 500000,
   force_openai_fast: false,
   free_openai_fast: false,
   model_pricing: [] as PricingFormEntry[],
@@ -5332,6 +5353,8 @@ const editForm = reactive({
   weekly_limit_usd: null as number | null,
   monthly_limit_usd: null as number | null,
   long_context_pricing_enabled: true,
+  gpt61_sol_long_context_enabled: false,
+  gpt61_sol_long_context_threshold: 500000,
   force_openai_fast: false,
   free_openai_fast: false,
   model_pricing: [] as PricingFormEntry[],
@@ -5810,6 +5833,8 @@ const closeCreateModal = () => {
   createForm.video_price_1080p = null;
   createForm.video_model_prices = createVideoModelPricesForm();
   createForm.long_context_pricing_enabled = true;
+  createForm.gpt61_sol_long_context_enabled = false;
+  createForm.gpt61_sol_long_context_threshold = 500000;
   createForm.force_openai_fast = false;
   createForm.free_openai_fast = false;
   createForm.model_pricing = [];
@@ -5912,6 +5937,13 @@ const handleCreateGroup = async () => {
   if (!validateProfitControlForm(createForm)) {
     return;
   }
+  if (
+    createForm.gpt61_sol_long_context_enabled &&
+    !isValidGroupContextThreshold(createForm.gpt61_sol_long_context_threshold)
+  ) {
+    appStore.showError(t("admin.groups.modelPricing.invalidContextThreshold"));
+    return;
+  }
   if (!validateGroupReasoningMultipliers(createForm.model_pricing)) return;
   // 模型白名单：开启且没有任何条目时阻止提交，与后端 400 对齐。
   if (
@@ -5933,6 +5965,7 @@ const handleCreateGroup = async () => {
     // 构建请求数据，包含模型路由配置
     const requestData = {
       ...createGroupForm,
+      ...groupLongContextPricingPayload(createForm),
       force_openai_fast: normalizeGroupOpenAIFast(
         createForm.platform,
         createForm.force_openai_fast,
@@ -6085,6 +6118,8 @@ const handleEdit = async (group: AdminGroup) => {
   editForm.monthly_limit_usd = group.monthly_limit_usd;
   editForm.long_context_pricing_enabled =
     group.long_context_pricing_enabled ?? true;
+  editForm.gpt61_sol_long_context_enabled = group.gpt61_sol_long_context_enabled ?? false;
+  editForm.gpt61_sol_long_context_threshold = group.gpt61_sol_long_context_threshold ?? 500000;
   editForm.force_openai_fast = group.force_openai_fast ?? false;
   editForm.free_openai_fast = group.free_openai_fast ?? false;
   editForm.model_pricing = groupPricingFromAPI(group.model_pricing);
@@ -6219,6 +6254,8 @@ const closeEditModal = () => {
   editForm.video_price_1080p = null;
   editForm.video_model_prices = createVideoModelPricesForm();
   editForm.long_context_pricing_enabled = true;
+  editForm.gpt61_sol_long_context_enabled = false;
+  editForm.gpt61_sol_long_context_threshold = 500000;
   editForm.force_openai_fast = false;
   editForm.free_openai_fast = false;
   editForm.model_pricing = [];
@@ -6251,6 +6288,13 @@ const handleUpdateGroup = async () => {
   if (!validateProfitControlForm(editForm)) {
     return;
   }
+  if (
+    editForm.gpt61_sol_long_context_enabled &&
+    !isValidGroupContextThreshold(editForm.gpt61_sol_long_context_threshold)
+  ) {
+    appStore.showError(t("admin.groups.modelPricing.invalidContextThreshold"));
+    return;
+  }
   if (!validateGroupReasoningMultipliers(editForm.model_pricing)) return;
   // 模型白名单：开启且没有任何条目时阻止提交，与后端 400 对齐。
   if (
@@ -6276,6 +6320,7 @@ const handleUpdateGroup = async () => {
     // 转换 fallback_group_id: null -> 0 (后端使用 0 表示清除)
     const payload = {
       ...editForm,
+      ...groupLongContextPricingPayload(editForm),
       force_openai_fast: normalizeGroupOpenAIFast(
         editForm.platform,
         editForm.force_openai_fast,
@@ -6706,6 +6751,9 @@ watch(
 watch(
   () => createForm.platform,
   (newVal) => {
+    if (!supportsGroupLongContextPricing(newVal)) {
+      createForm.gpt61_sol_long_context_enabled = false;
+    }
     if (!["anthropic", "antigravity"].includes(newVal)) {
       createForm.fallback_group_id_on_invalid_request = null;
     }
@@ -6740,6 +6788,7 @@ watch(
       createForm.require_oauth_only = false;
       createForm.require_privacy_set = false;
     }
+    createForm.allow_image_generation = defaultAllowImageGenerationForPlatform(newVal);
     resetDisabledBatchImagePricing(createForm);
     resetModelAllowlistState(createModelAllowlistState);
     loadModelAllowlistCandidates("create", 0, newVal);
@@ -6763,6 +6812,9 @@ watch(
 watch(
   () => editForm.platform,
   (newVal) => {
+    if (!supportsGroupLongContextPricing(newVal)) {
+      editForm.gpt61_sol_long_context_enabled = false;
+    }
     if (!["anthropic", "antigravity"].includes(newVal)) {
       editForm.fallback_group_id_on_invalid_request = null;
     }

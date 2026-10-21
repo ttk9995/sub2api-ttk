@@ -118,7 +118,7 @@ func (s *BillingService) ResolveContextPricingSchedule(ctx context.Context, reso
 		return s.CalculateTokenCostForRequest(r)
 	}
 
-	plan := s.contextPricingBreakpoints(resolver, resolved, in.Model)
+	plan := s.contextPricingBreakpoints(resolver, resolved, in.Model, in.Group)
 	segments := buildContextSegments(plan.bounds)
 
 	tiers := make([]ContextPricingTier, 0, len(segments))
@@ -198,7 +198,7 @@ type contextBreakpointPlan struct {
 }
 
 // contextPricingBreakpoints 从计费自身的规则输入收集价格断点（不读取任何倍率）。
-func (s *BillingService) contextPricingBreakpoints(resolver *ModelPricingResolver, resolved *ResolvedPricing, model string) contextBreakpointPlan {
+func (s *BillingService) contextPricingBreakpoints(resolver *ModelPricingResolver, resolved *ResolvedPricing, model string, group *Group) contextBreakpointPlan {
 	plan := contextBreakpointPlan{}
 	if !resolved.longContextPricingEnabled {
 		return plan
@@ -229,6 +229,7 @@ func (s *BillingService) contextPricingBreakpoints(resolver *ModelPricingResolve
 	// 当前时刻；此处 pricing 仅取 LongContextInputThreshold 等时间无关字段，
 	// DeepSeek pro→Flash 切换不影响断点结果。
 	pricing = s.applyModelSpecificPricingPolicyEx(model, pricing, true, timezone.Now())
+	pricing = applyGroupLongContextPricingPolicy(model, pricing, group)
 	if pricing.LongContextInputThreshold <= 0 {
 		return plan
 	}

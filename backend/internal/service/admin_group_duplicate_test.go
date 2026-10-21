@@ -156,6 +156,9 @@ func TestDuplicateGroupCopiesConfigurationDeeplyAndResetsRuntimeState(t *testing
 			VideoPriceFamilyGrokImagineVideo15: {VideoBillingResolution720P: 0.14},
 		},
 		WebSearchPricePerCall:           groupDuplicateTestPointer(0.005),
+		LongContextPricingEnabled:       true,
+		GPT61SolLongContextEnabled:      true,
+		GPT61SolLongContextThreshold:    640000,
 		ClaudeCodeOnly:                  true,
 		FallbackGroupID:                 groupDuplicateTestPointer(int64(7)),
 		FallbackGroupIDOnInvalidRequest: groupDuplicateTestPointer(int64(8)),
@@ -212,6 +215,9 @@ func TestDuplicateGroupCopiesConfigurationDeeplyAndResetsRuntimeState(t *testing
 	require.Equal(t, source.ImagePrice4K, duplicate.ImagePrice4K)
 	require.Equal(t, source.VideoModelPrices, duplicate.VideoModelPrices)
 	require.Equal(t, source.WebSearchPricePerCall, duplicate.WebSearchPricePerCall)
+	require.Equal(t, source.LongContextPricingEnabled, duplicate.LongContextPricingEnabled)
+	require.Equal(t, source.GPT61SolLongContextEnabled, duplicate.GPT61SolLongContextEnabled)
+	require.Equal(t, source.GPT61SolLongContextThreshold, duplicate.GPT61SolLongContextThreshold)
 	require.Equal(t, source.FallbackGroupID, duplicate.FallbackGroupID)
 	require.Equal(t, source.ModelRouting, duplicate.ModelRouting)
 	require.Equal(t, source.MessagesDispatchModelConfig, duplicate.MessagesDispatchModelConfig)

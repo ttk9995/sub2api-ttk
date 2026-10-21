@@ -127,6 +127,7 @@ func createGroupRecord(ctx context.Context, client *dbent.Client, groupIn *servi
 		SetNillableAudioTtsPricePerMillionChars(groupIn.AudioTTSPricePerMillionChars).
 		SetNillableAudioSttPricePerHour(groupIn.AudioSTTPricePerHour).
 		SetLongContextPricingEnabled(groupIn.LongContextPricingEnabled).
+		SetGpt61SolLongContextEnabled(groupIn.GPT61SolLongContextEnabled).
 		SetModelPricing(modelPricing).
 		SetDefaultValidityDays(groupIn.DefaultValidityDays).
 		SetClaudeCodeOnly(groupIn.ClaudeCodeOnly).
@@ -155,6 +156,9 @@ func createGroupRecord(ctx context.Context, client *dbent.Client, groupIn *servi
 		SetProfitControlEnabled(groupIn.ProfitControlEnabled).
 		SetProfitMinMargin(groupIn.ProfitMinMargin).
 		SetProfitSafetyBuffer(groupIn.ProfitSafetyBuffer)
+	if groupIn.GPT61SolLongContextThreshold != 0 {
+		builder = builder.SetGpt61SolLongContextThreshold(groupIn.GPT61SolLongContextThreshold)
+	}
 	if groupIn.DuplicateOperationID != "" {
 		builder = builder.SetDuplicateOperationID(groupIn.DuplicateOperationID)
 	}
@@ -313,6 +317,7 @@ func (r *groupRepository) Update(ctx context.Context, groupIn *service.Group) er
 		SetNillableVideoPrice1080p(groupIn.VideoPrice1080P).
 		SetVideoModelPrices(service.NormalizeVideoModelPrices(groupIn.VideoModelPrices)).
 		SetLongContextPricingEnabled(groupIn.LongContextPricingEnabled).
+		SetGpt61SolLongContextEnabled(groupIn.GPT61SolLongContextEnabled).
 		SetModelPricing(modelPricing).
 		SetDefaultValidityDays(groupIn.DefaultValidityDays).
 		SetClaudeCodeOnly(groupIn.ClaudeCodeOnly).
@@ -341,6 +346,9 @@ func (r *groupRepository) Update(ctx context.Context, groupIn *service.Group) er
 		SetProfitSafetyBuffer(groupIn.ProfitSafetyBuffer)
 
 	// 显式处理可空字段：nil 需要 clear，非 nil 需要 set。
+	if groupIn.GPT61SolLongContextThreshold != 0 {
+		builder = builder.SetGpt61SolLongContextThreshold(groupIn.GPT61SolLongContextThreshold)
+	}
 	if groupIn.DailyLimitUSD != nil {
 		builder = builder.SetDailyLimitUsd(*groupIn.DailyLimitUSD)
 	} else {

@@ -83,7 +83,7 @@ var (
 		CacheCreationInputTokenCostPriority: 5e-6,
 		CacheReadInputTokenCost:             0.1e-6,
 		CacheReadInputTokenCostPriority:     0.2e-6,
-		LongContextInputTokenThreshold:      500_000,
+		LongContextInputTokenThreshold:      272_000,
 		LongContextInputCostMultiplier:      2,
 		LongContextOutputCostMultiplier:     1.5,
 		SupportsServiceTier:                 true,

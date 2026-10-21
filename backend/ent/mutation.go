@@ -22143,6 +22143,9 @@ type GroupMutation struct {
 	audio_stt_price_per_hour                *float64
 	addaudio_stt_price_per_hour             *float64
 	long_context_pricing_enabled            *bool
+	gpt61_sol_long_context_enabled          *bool
+	gpt61_sol_long_context_threshold        *int
+	addgpt61_sol_long_context_threshold     *int
 	model_pricing                           *jsontext.Value
 	appendmodel_pricing                     jsontext.Value
 	claude_code_only                        *bool
@@ -24444,6 +24447,98 @@ func (m *GroupMutation) ResetLongContextPricingEnabled() {
 	m.long_context_pricing_enabled = nil
 }
 
+// SetGpt61SolLongContextEnabled sets the "gpt61_sol_long_context_enabled" field.
+func (m *GroupMutation) SetGpt61SolLongContextEnabled(b bool) {
+	m.gpt61_sol_long_context_enabled = &b
+}
+
+// Gpt61SolLongContextEnabled returns the value of the "gpt61_sol_long_context_enabled" field in the mutation.
+func (m *GroupMutation) Gpt61SolLongContextEnabled() (r bool, exists bool) {
+	v := m.gpt61_sol_long_context_enabled
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGpt61SolLongContextEnabled returns the old "gpt61_sol_long_context_enabled" field's value of the Group entity.
+// If the Group object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupMutation) OldGpt61SolLongContextEnabled(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGpt61SolLongContextEnabled is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGpt61SolLongContextEnabled requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGpt61SolLongContextEnabled: %w", err)
+	}
+	return oldValue.Gpt61SolLongContextEnabled, nil
+}
+
+// ResetGpt61SolLongContextEnabled resets all changes to the "gpt61_sol_long_context_enabled" field.
+func (m *GroupMutation) ResetGpt61SolLongContextEnabled() {
+	m.gpt61_sol_long_context_enabled = nil
+}
+
+// SetGpt61SolLongContextThreshold sets the "gpt61_sol_long_context_threshold" field.
+func (m *GroupMutation) SetGpt61SolLongContextThreshold(i int) {
+	m.gpt61_sol_long_context_threshold = &i
+	m.addgpt61_sol_long_context_threshold = nil
+}
+
+// Gpt61SolLongContextThreshold returns the value of the "gpt61_sol_long_context_threshold" field in the mutation.
+func (m *GroupMutation) Gpt61SolLongContextThreshold() (r int, exists bool) {
+	v := m.gpt61_sol_long_context_threshold
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldGpt61SolLongContextThreshold returns the old "gpt61_sol_long_context_threshold" field's value of the Group entity.
+// If the Group object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *GroupMutation) OldGpt61SolLongContextThreshold(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldGpt61SolLongContextThreshold is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldGpt61SolLongContextThreshold requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldGpt61SolLongContextThreshold: %w", err)
+	}
+	return oldValue.Gpt61SolLongContextThreshold, nil
+}
+
+// AddGpt61SolLongContextThreshold adds i to the "gpt61_sol_long_context_threshold" field.
+func (m *GroupMutation) AddGpt61SolLongContextThreshold(i int) {
+	if m.addgpt61_sol_long_context_threshold != nil {
+		*m.addgpt61_sol_long_context_threshold += i
+	} else {
+		m.addgpt61_sol_long_context_threshold = &i
+	}
+}
+
+// AddedGpt61SolLongContextThreshold returns the value that was added to the "gpt61_sol_long_context_threshold" field in this mutation.
+func (m *GroupMutation) AddedGpt61SolLongContextThreshold() (r int, exists bool) {
+	v := m.addgpt61_sol_long_context_threshold
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetGpt61SolLongContextThreshold resets all changes to the "gpt61_sol_long_context_threshold" field.
+func (m *GroupMutation) ResetGpt61SolLongContextThreshold() {
+	m.gpt61_sol_long_context_threshold = nil
+	m.addgpt61_sol_long_context_threshold = nil
+}
+
 // SetModelPricing sets the "model_pricing" field.
 func (m *GroupMutation) SetModelPricing(j jsontext.Value) {
 	m.model_pricing = &j
@@ -25958,7 +26053,7 @@ func (m *GroupMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *GroupMutation) Fields() []string {
-	fields := make([]string, 0, 67)
+	fields := make([]string, 0, 69)
 	if m.created_at != nil {
 		fields = append(fields, group.FieldCreatedAt)
 	}
@@ -26081,6 +26176,12 @@ func (m *GroupMutation) Fields() []string {
 	}
 	if m.long_context_pricing_enabled != nil {
 		fields = append(fields, group.FieldLongContextPricingEnabled)
+	}
+	if m.gpt61_sol_long_context_enabled != nil {
+		fields = append(fields, group.FieldGpt61SolLongContextEnabled)
+	}
+	if m.gpt61_sol_long_context_threshold != nil {
+		fields = append(fields, group.FieldGpt61SolLongContextThreshold)
 	}
 	if m.model_pricing != nil {
 		fields = append(fields, group.FieldModelPricing)
@@ -26250,6 +26351,10 @@ func (m *GroupMutation) Field(name string) (ent.Value, bool) {
 		return m.AudioSttPricePerHour()
 	case group.FieldLongContextPricingEnabled:
 		return m.LongContextPricingEnabled()
+	case group.FieldGpt61SolLongContextEnabled:
+		return m.Gpt61SolLongContextEnabled()
+	case group.FieldGpt61SolLongContextThreshold:
+		return m.Gpt61SolLongContextThreshold()
 	case group.FieldModelPricing:
 		return m.ModelPricing()
 	case group.FieldClaudeCodeOnly:
@@ -26393,6 +26498,10 @@ func (m *GroupMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldAudioSttPricePerHour(ctx)
 	case group.FieldLongContextPricingEnabled:
 		return m.OldLongContextPricingEnabled(ctx)
+	case group.FieldGpt61SolLongContextEnabled:
+		return m.OldGpt61SolLongContextEnabled(ctx)
+	case group.FieldGpt61SolLongContextThreshold:
+		return m.OldGpt61SolLongContextThreshold(ctx)
 	case group.FieldModelPricing:
 		return m.OldModelPricing(ctx)
 	case group.FieldClaudeCodeOnly:
@@ -26741,6 +26850,20 @@ func (m *GroupMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetLongContextPricingEnabled(v)
 		return nil
+	case group.FieldGpt61SolLongContextEnabled:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGpt61SolLongContextEnabled(v)
+		return nil
+	case group.FieldGpt61SolLongContextThreshold:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetGpt61SolLongContextThreshold(v)
+		return nil
 	case group.FieldModelPricing:
 		v, ok := value.(jsontext.Value)
 		if !ok {
@@ -26994,6 +27117,9 @@ func (m *GroupMutation) AddedFields() []string {
 	if m.addaudio_stt_price_per_hour != nil {
 		fields = append(fields, group.FieldAudioSttPricePerHour)
 	}
+	if m.addgpt61_sol_long_context_threshold != nil {
+		fields = append(fields, group.FieldGpt61SolLongContextThreshold)
+	}
 	if m.addfallback_group_id != nil {
 		fields = append(fields, group.FieldFallbackGroupID)
 	}
@@ -27062,6 +27188,8 @@ func (m *GroupMutation) AddedField(name string) (ent.Value, bool) {
 		return m.AddedAudioTtsPricePerMillionChars()
 	case group.FieldAudioSttPricePerHour:
 		return m.AddedAudioSttPricePerHour()
+	case group.FieldGpt61SolLongContextThreshold:
+		return m.AddedGpt61SolLongContextThreshold()
 	case group.FieldFallbackGroupID:
 		return m.AddedFallbackGroupID()
 	case group.FieldFallbackGroupIDOnInvalidRequest:
@@ -27229,6 +27357,13 @@ func (m *GroupMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddAudioSttPricePerHour(v)
+		return nil
+	case group.FieldGpt61SolLongContextThreshold:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddGpt61SolLongContextThreshold(v)
 		return nil
 	case group.FieldFallbackGroupID:
 		v, ok := value.(int64)
@@ -27556,6 +27691,12 @@ func (m *GroupMutation) ResetField(name string) error {
 		return nil
 	case group.FieldLongContextPricingEnabled:
 		m.ResetLongContextPricingEnabled()
+		return nil
+	case group.FieldGpt61SolLongContextEnabled:
+		m.ResetGpt61SolLongContextEnabled()
+		return nil
+	case group.FieldGpt61SolLongContextThreshold:
+		m.ResetGpt61SolLongContextThreshold()
 		return nil
 	case group.FieldModelPricing:
 		m.ResetModelPricing()

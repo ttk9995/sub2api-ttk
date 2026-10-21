@@ -378,7 +378,7 @@ func TestResolveContextPricingSchedule_Scenarios(t *testing.T) {
 	}
 }
 
-func TestResolveContextPricingSchedule_GPT61Sol500k(t *testing.T) {
+func TestResolveContextPricingSchedule_GPT61SolDefault272k(t *testing.T) {
 	for _, staleCatalog := range []bool{false, true} {
 		var catalog *PricingService
 		if staleCatalog {
@@ -399,8 +399,8 @@ func TestResolveContextPricingSchedule_GPT61Sol500k(t *testing.T) {
 				require.NotNil(t, sched)
 				require.Len(t, sched.Tiers, 2)
 				p := testPtrFloat64
-				requireTier(t, sched.Tiers[0], 0, intPtr(500000), "≤500K", p(2e-6), p(10e-6), p(2.5e-6), p(0.1e-6))
-				requireTier(t, sched.Tiers[1], 500000, nil, ">500K", p(4e-6), p(15e-6), p(5e-6), p(0.2e-6))
+				requireTier(t, sched.Tiers[0], 0, intPtr(272000), "≤272K", p(2e-6), p(10e-6), p(2.5e-6), p(0.1e-6))
+				requireTier(t, sched.Tiers[1], 272000, nil, ">272K", p(4e-6), p(15e-6), p(5e-6), p(0.2e-6))
 			}
 		}
 	}

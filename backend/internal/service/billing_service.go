@@ -601,7 +601,7 @@ func (s *BillingService) initFallbackPricing() {
 		CacheReadPricePerToken:             0.1e-6,
 		CacheReadPricePerTokenPriority:     0.2e-6,
 		CacheCreationPriceExplicit:         true,
-		LongContextInputThreshold:          500_000,
+		LongContextInputThreshold:          272_000,
 		LongContextInputMultiplier:         2,
 		LongContextOutputMultiplier:        1.5,
 	}
@@ -1558,6 +1558,7 @@ func (s *BillingService) CalculateCostUnified(input CostInput) (*CostBreakdown, 
 		if err != nil {
 			return nil, err
 		}
+		pricing = applyGroupLongContextPricingPolicy(input.Model, pricing, input.Group)
 		breakdown := s.computeTokenBreakdown(pricing, input.Tokens, input.RateMultiplier, input.ServiceTier, applyLongContextBilling && !input.DisableModelLongContextPricing)
 		applyCostBreakdownMultiplier(breakdown, reasoningEffortBillingMultiplier(input.ReasoningEffort, pricing.ReasoningEffortMultipliers))
 		return breakdown, nil
@@ -1629,6 +1630,9 @@ func (s *BillingService) calculateTokenCost(resolved *ResolvedPricing, input Cos
 	// 默认价卡（Source=LiteLLM）应用 DeepSeek 官方价强制覆盖（幂等，GetModelPricing
 	// 内部已强制过）；分组/渠道自定义定价保留运营者配置，不强制覆盖官方价。
 	pricing = s.applyModelSpecificPricingPolicyEx(input.Model, pricing, resolved.Source == PricingSourceLiteLLM, pricingAt)
+	if len(resolved.Intervals) == 0 {
+		pricing = applyGroupLongContextPricingPolicy(input.Model, pricing, input.Group)
+	}
 
 	// DeepSeek 模型默认价卡按官方峰谷口径调整：高峰时段（01:00–04:00 与
 	// 06:00–10:00 UTC，仅工作日；北京时间周末全天低谷）按 2× 低谷价计费。
@@ -1895,8 +1899,8 @@ func (s *BillingService) calculateCostInternalWithPolicy(
 // applyModelSpecificPricingPolicy 对目录数据做模型特定修正：DeepSeek 官方价
 // 强制覆盖；GPT-5.6 缺 cache_write 价时按官方规则补 1.25 倍输入价；Fast/priority
 // 档按业务倍率改写（本地/远程目录的 priority 价可能沿用官方旧口径）。长上下文
-// 阶梯由目录数据驱动；GPT-6.1 Sol 的旧 272k 默认阶梯按本项目订阅业务修正为
-// 500k，防止远程价表刷新回退。强制 DeepSeek 官方价且无显式计费时点（pro→Flash 切换按当前时刻判定），
+// 阶梯由目录数据驱动；GPT-6.1 Sol 的默认阶梯恢复为 272k，分组自定义阈值
+// 在本策略之后应用。强制 DeepSeek 官方价且无显式计费时点（pro→Flash 切换按当前时刻判定），
 // 供无既有时点的策略修正场景与测试使用；计费/展示主路径分别经
 // calculateTokenCost 与 getModelPricingAt 显式传时点，分组/渠道自定义定价
 // 用 applyModelSpecificPricingPolicyEx 关闭强制，保留运营者配置。
@@ -1941,8 +1945,8 @@ func (s *BillingService) applyModelSpecificPricingPolicyEx(model string, pricing
 	}
 	normalized := normalizeKnownOpenAICodexModel(model)
 	// 这里的 forceDeepSeekRates 同时区分默认价卡和渠道/分组自定义价格。
-	// 仅迁移 GPT-6.1 Sol 的旧阈值，不补齐已关闭/缺失的阶梯，不改其他显式阈值。
-	needsGPT61SolContextThreshold := forceDeepSeekRates && openai.IsGPT61SolModelSpelling(normalized) && pricing.LongContextInputThreshold == 272_000
+	// 恢复此前全局提到 500k 的默认阈值；关闭/缺失的阶梯和其他显式阈值仍保留。
+	needsGPT61SolContextThreshold := forceDeepSeekRates && openai.IsGPT61SolModelSpelling(normalized) && pricing.LongContextInputThreshold == 500_000
 	usesCacheWritePremium := isOpenAIGPT56Model(normalized) || (openai.IsGPT6SolOrLunaModelSpelling(normalized) || openai.IsGPT61SolModelSpelling(normalized))
 	needsCacheCreationPolicy := usesCacheWritePremium && !pricing.CacheCreationPriceExplicit && (pricing.CacheCreationPricePerToken <= 0 ||
 		(pricing.InputPricePerTokenPriority > 0 && pricing.CacheCreationPricePerTokenPriority <= 0))
@@ -1953,7 +1957,7 @@ func (s *BillingService) applyModelSpecificPricingPolicyEx(model string, pricing
 	}
 	cloned := *pricing
 	if needsGPT61SolContextThreshold {
-		cloned.LongContextInputThreshold = 500_000
+		cloned.LongContextInputThreshold = 272_000
 	}
 	if isOpenAIGPT6AstraModel(normalized) {
 		cloned.UltrafastMultiplier = 6
