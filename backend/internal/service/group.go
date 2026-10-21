@@ -74,7 +74,11 @@ type Group struct {
 	// ModelPricing overrides channel and built-in prices for matching models.
 	// Token intervals are selected only when LongContextPricingEnabled is true.
 	LongContextPricingEnabled bool
-	ModelPricing              []ChannelModelPricing
+	// GPT61SolLongContextEnabled replaces only this model's surcharge boundary;
+	// the group/account long-context billing controls still decide whether to bill it.
+	GPT61SolLongContextEnabled   bool
+	GPT61SolLongContextThreshold int
+	ModelPricing                 []ChannelModelPricing
 
 	// Claude Code 客户端限制
 	ClaudeCodeOnly  bool

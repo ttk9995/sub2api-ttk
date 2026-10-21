@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { AdminGroup, CodexModelsManifestConfig } from "@/types";
 import GroupsView from "@/views/admin/GroupsView.vue";
+import { adminAPI } from "@/api/admin";
 
 const {
   listGroups,
@@ -78,6 +79,8 @@ const sourceGroup = {
   weekly_limit_usd: null,
   monthly_limit_usd: null,
   long_context_pricing_enabled: true,
+  gpt61_sol_long_context_enabled: true,
+  gpt61_sol_long_context_threshold: 640000,
   force_openai_fast: false,
   free_openai_fast: false,
   model_pricing: [],
@@ -220,7 +223,12 @@ const mountView = () =>
         GroupCapacityBadge: true,
         GroupRateMultipliersModal: true,
         GroupRPMOverridesModal: true,
-        ReasoningEffortPolicyFields: true,
+        ReasoningEffortPolicyFields: defineComponent({
+          setup(_, { expose }) {
+            expose({ validate: () => true, resetValidation: () => undefined });
+            return () => h('div');
+          },
+        }),
         CodexManifestAccountsField: CodexManifestAccountsFieldStub,
         PricingEntryCard: true,
         VueDraggable: true,
@@ -283,6 +291,27 @@ describe("GroupsView Codex manifest binding", () => {
       }),
     );
 
+    wrapper.unmount();
+  });
+
+  it("edits and saves the group context threshold and retains it when disabled", async () => {
+    vi.mocked(adminAPI.groups.update).mockResolvedValue(sourceGroup);
+    const wrapper = mountView();
+    await flushPromises();
+    await wrapper.findAll('button').find(button => button.text().includes('common.edit'))!.trigger('click');
+    await flushPromises();
+    const field = wrapper.get('[data-testid="edit-long-context-threshold"]');
+    expect((field.get('input').element as HTMLInputElement).value).toBe('640000');
+    expect(field.get('[role="switch"]').attributes('aria-checked')).toBe('true');
+    await field.get('input').setValue('550000');
+    await field.get('[role="switch"]').trigger('click');
+    expect((field.get('input').element as HTMLInputElement).disabled).toBe(true);
+    await wrapper.get('#edit-group-form').trigger('submit');
+    await flushPromises();
+    expect(adminAPI.groups.update).toHaveBeenCalledWith(42, expect.objectContaining({
+      gpt61_sol_long_context_enabled: false,
+      gpt61_sol_long_context_threshold: 550000,
+    }));
     wrapper.unmount();
   });
 });

@@ -593,6 +593,8 @@ export interface Group {
   weekly_limit_usd: number | null
   monthly_limit_usd: number | null
   long_context_pricing_enabled: boolean
+  gpt61_sol_long_context_enabled?: boolean
+  gpt61_sol_long_context_threshold?: number
   // 图片生成计费配置
   allow_image_generation: boolean
   allow_batch_image_generation: boolean
@@ -821,6 +823,8 @@ export interface CreateGroupRequest {
   weekly_limit_usd?: number | null
   monthly_limit_usd?: number | null
   long_context_pricing_enabled?: boolean
+  gpt61_sol_long_context_enabled?: boolean
+  gpt61_sol_long_context_threshold?: number
   force_openai_fast?: boolean
   free_openai_fast?: boolean
   model_pricing?: import('@/api/admin/channels').ChannelModelPricing[]
@@ -888,6 +892,8 @@ export interface UpdateGroupRequest {
   weekly_limit_usd?: number | null
   monthly_limit_usd?: number | null
   long_context_pricing_enabled?: boolean
+  gpt61_sol_long_context_enabled?: boolean
+  gpt61_sol_long_context_threshold?: number
   force_openai_fast?: boolean
   free_openai_fast?: boolean
   model_pricing?: import('@/api/admin/channels').ChannelModelPricing[]

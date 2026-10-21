@@ -2010,9 +2010,6 @@ func TestNewModelPricingCatalogFallbackAndContext(t *testing.T) {
 		} {
 			t.Run(source+"/"+tc.model, func(t *testing.T) {
 				threshold := 272000
-				if tc.model == "gpt-6.1-sol" {
-					threshold = 500000
-				}
 				for _, n := range []int{271999, 272000, 272001, 499999, 500000, 500001} {
 					for tier, mult := range map[string]float64{"": 1, "priority": 2, "fast": 2, "flex": 0.5} {
 						tokens := UsageTokens{InputTokens: n - 3000, CacheReadTokens: 2000, CacheCreationTokens: 1000, OutputTokens: 500}
@@ -2105,10 +2102,10 @@ func TestGPT61SolDefaultLongContextThresholdPolicy(t *testing.T) {
 		defaultPricing bool
 		wantThreshold  int
 	}{
-		{"stale catalog", "gpt-6.1-sol", 272000, true, 500000},
-		{"effort alias", "openai/gpt-6.1-sol-max", 272000, true, 500000},
-		{"compact alias", "gpt-6.1-sol-openai-compact", 272000, true, 500000},
-		{"already migrated", "gpt-6.1-sol", 500000, true, 500000},
+		{"default catalog", "gpt-6.1-sol", 272000, true, 272000},
+		{"effort alias", "openai/gpt-6.1-sol-max", 500000, true, 272000},
+		{"compact alias", "gpt-6.1-sol-openai-compact", 500000, true, 272000},
+		{"previous global threshold", "gpt-6.1-sol", 500000, true, 272000},
 		{"disabled ladder", "gpt-6.1-sol", 0, true, 0},
 		{"different explicit threshold", "gpt-6.1-sol", 600000, true, 600000},
 		{"channel pricing", "gpt-6.1-sol", 272000, false, 272000},

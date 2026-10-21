@@ -106,11 +106,13 @@ type Group struct {
 	// name/description 换成请求语言的版本后清空本字段。
 	I18n domain.GroupI18n `json:"i18n,omitempty"`
 
-	SubscriptionType          string   `json:"subscription_type"`
-	DailyLimitUSD             *float64 `json:"daily_limit_usd"`
-	WeeklyLimitUSD            *float64 `json:"weekly_limit_usd"`
-	MonthlyLimitUSD           *float64 `json:"monthly_limit_usd"`
-	LongContextPricingEnabled bool     `json:"long_context_pricing_enabled"`
+	SubscriptionType             string   `json:"subscription_type"`
+	DailyLimitUSD                *float64 `json:"daily_limit_usd"`
+	WeeklyLimitUSD               *float64 `json:"weekly_limit_usd"`
+	MonthlyLimitUSD              *float64 `json:"monthly_limit_usd"`
+	LongContextPricingEnabled    bool     `json:"long_context_pricing_enabled"`
+	GPT61SolLongContextEnabled   bool     `json:"gpt61_sol_long_context_enabled"`
+	GPT61SolLongContextThreshold int      `json:"gpt61_sol_long_context_threshold"`
 
 	// 图片生成计费配置（仅 antigravity 平台使用）
 	AllowImageGeneration         bool    `json:"allow_image_generation"`

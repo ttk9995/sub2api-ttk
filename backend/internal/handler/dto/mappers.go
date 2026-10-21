@@ -193,6 +193,8 @@ func groupFromServiceBase(g *service.Group) Group {
 		WeeklyLimitUSD:                  g.WeeklyLimitUSD,
 		MonthlyLimitUSD:                 g.MonthlyLimitUSD,
 		LongContextPricingEnabled:       g.LongContextPricingEnabled,
+		GPT61SolLongContextEnabled:      g.GPT61SolLongContextEnabled,
+		GPT61SolLongContextThreshold:    g.GPT61SolLongContextThreshold,
 		AllowImageGeneration:            g.AllowImageGeneration,
 		AllowBatchImageGeneration:       g.AllowBatchImageGeneration,
 		ImageRateIndependent:            g.ImageRateIndependent,

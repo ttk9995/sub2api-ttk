@@ -14,7 +14,7 @@ import (
 	"github.com/dgraph-io/ristretto"
 )
 
-const apiKeyAuthSnapshotVersion = 24 // v24: group model_allowlist field (renamed from models_list_config, enforcing semantics)
+const apiKeyAuthSnapshotVersion = 25 // v25: group GPT-6.1 Sol long-context threshold override
 
 type apiKeyAuthCacheConfig struct {
 	l1Size        int
@@ -408,6 +408,8 @@ func (s *APIKeyService) snapshotFromAPIKey(ctx context.Context, apiKey *APIKey) 
 			AudioTTSPricePerMillionChars:    apiKey.Group.AudioTTSPricePerMillionChars,
 			AudioSTTPricePerHour:            apiKey.Group.AudioSTTPricePerHour,
 			LongContextPricingEnabled:       apiKey.Group.LongContextPricingEnabled,
+			GPT61SolLongContextEnabled:      apiKey.Group.GPT61SolLongContextEnabled,
+			GPT61SolLongContextThreshold:    apiKey.Group.GPT61SolLongContextThreshold,
 			ModelPricing:                    apiKey.Group.ModelPricing,
 			ClaudeCodeOnly:                  apiKey.Group.ClaudeCodeOnly,
 			FallbackGroupID:                 apiKey.Group.FallbackGroupID,
@@ -510,6 +512,8 @@ func (s *APIKeyService) snapshotToAPIKey(key string, snapshot *APIKeyAuthSnapsho
 			AudioTTSPricePerMillionChars:    snapshot.Group.AudioTTSPricePerMillionChars,
 			AudioSTTPricePerHour:            snapshot.Group.AudioSTTPricePerHour,
 			LongContextPricingEnabled:       snapshot.Group.LongContextPricingEnabled,
+			GPT61SolLongContextEnabled:      snapshot.Group.GPT61SolLongContextEnabled,
+			GPT61SolLongContextThreshold:    snapshot.Group.GPT61SolLongContextThreshold,
 			ModelPricing:                    snapshot.Group.ModelPricing,
 			ClaudeCodeOnly:                  snapshot.Group.ClaudeCodeOnly,
 			FallbackGroupID:                 snapshot.Group.FallbackGroupID,

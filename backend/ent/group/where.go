@@ -250,6 +250,16 @@ func LongContextPricingEnabled(v bool) predicate.Group {
 	return predicate.Group(sql.FieldEQ(FieldLongContextPricingEnabled, v))
 }
 
+// Gpt61SolLongContextEnabled applies equality check predicate on the "gpt61_sol_long_context_enabled" field. It's identical to Gpt61SolLongContextEnabledEQ.
+func Gpt61SolLongContextEnabled(v bool) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldGpt61SolLongContextEnabled, v))
+}
+
+// Gpt61SolLongContextThreshold applies equality check predicate on the "gpt61_sol_long_context_threshold" field. It's identical to Gpt61SolLongContextThresholdEQ.
+func Gpt61SolLongContextThreshold(v int) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldGpt61SolLongContextThreshold, v))
+}
+
 // ClaudeCodeOnly applies equality check predicate on the "claude_code_only" field. It's identical to ClaudeCodeOnlyEQ.
 func ClaudeCodeOnly(v bool) predicate.Group {
 	return predicate.Group(sql.FieldEQ(FieldClaudeCodeOnly, v))
@@ -2073,6 +2083,56 @@ func LongContextPricingEnabledEQ(v bool) predicate.Group {
 // LongContextPricingEnabledNEQ applies the NEQ predicate on the "long_context_pricing_enabled" field.
 func LongContextPricingEnabledNEQ(v bool) predicate.Group {
 	return predicate.Group(sql.FieldNEQ(FieldLongContextPricingEnabled, v))
+}
+
+// Gpt61SolLongContextEnabledEQ applies the EQ predicate on the "gpt61_sol_long_context_enabled" field.
+func Gpt61SolLongContextEnabledEQ(v bool) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldGpt61SolLongContextEnabled, v))
+}
+
+// Gpt61SolLongContextEnabledNEQ applies the NEQ predicate on the "gpt61_sol_long_context_enabled" field.
+func Gpt61SolLongContextEnabledNEQ(v bool) predicate.Group {
+	return predicate.Group(sql.FieldNEQ(FieldGpt61SolLongContextEnabled, v))
+}
+
+// Gpt61SolLongContextThresholdEQ applies the EQ predicate on the "gpt61_sol_long_context_threshold" field.
+func Gpt61SolLongContextThresholdEQ(v int) predicate.Group {
+	return predicate.Group(sql.FieldEQ(FieldGpt61SolLongContextThreshold, v))
+}
+
+// Gpt61SolLongContextThresholdNEQ applies the NEQ predicate on the "gpt61_sol_long_context_threshold" field.
+func Gpt61SolLongContextThresholdNEQ(v int) predicate.Group {
+	return predicate.Group(sql.FieldNEQ(FieldGpt61SolLongContextThreshold, v))
+}
+
+// Gpt61SolLongContextThresholdIn applies the In predicate on the "gpt61_sol_long_context_threshold" field.
+func Gpt61SolLongContextThresholdIn(vs ...int) predicate.Group {
+	return predicate.Group(sql.FieldIn(FieldGpt61SolLongContextThreshold, vs...))
+}
+
+// Gpt61SolLongContextThresholdNotIn applies the NotIn predicate on the "gpt61_sol_long_context_threshold" field.
+func Gpt61SolLongContextThresholdNotIn(vs ...int) predicate.Group {
+	return predicate.Group(sql.FieldNotIn(FieldGpt61SolLongContextThreshold, vs...))
+}
+
+// Gpt61SolLongContextThresholdGT applies the GT predicate on the "gpt61_sol_long_context_threshold" field.
+func Gpt61SolLongContextThresholdGT(v int) predicate.Group {
+	return predicate.Group(sql.FieldGT(FieldGpt61SolLongContextThreshold, v))
+}
+
+// Gpt61SolLongContextThresholdGTE applies the GTE predicate on the "gpt61_sol_long_context_threshold" field.
+func Gpt61SolLongContextThresholdGTE(v int) predicate.Group {
+	return predicate.Group(sql.FieldGTE(FieldGpt61SolLongContextThreshold, v))
+}
+
+// Gpt61SolLongContextThresholdLT applies the LT predicate on the "gpt61_sol_long_context_threshold" field.
+func Gpt61SolLongContextThresholdLT(v int) predicate.Group {
+	return predicate.Group(sql.FieldLT(FieldGpt61SolLongContextThreshold, v))
+}
+
+// Gpt61SolLongContextThresholdLTE applies the LTE predicate on the "gpt61_sol_long_context_threshold" field.
+func Gpt61SolLongContextThresholdLTE(v int) predicate.Group {
+	return predicate.Group(sql.FieldLTE(FieldGpt61SolLongContextThreshold, v))
 }
 
 // ModelPricingIsNil applies the IsNil predicate on the "model_pricing" field.

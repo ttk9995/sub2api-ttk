@@ -1113,6 +1113,11 @@ export default {
         rateMultiplierHint: '填写后仅该模型使用此倍率；未填写则沿用分组/用户专属倍率。',
         longContext: '启用长上下文阶梯定价',
         longContextHint: '勾选后按渠道区间或官方预设阶梯计费；关闭后默认按第一档，账号显式开启时除外。',
+        gpt61SolThresholdTitle: 'GPT 6.1 Sol 自定义长上下文计费阈值',
+        gpt61SolThresholdHint: '关闭时使用默认 272000 token；开启后，严格超过填写值才加收长上下文费用。',
+        contextThresholdTokens: '输入与缓存 token 总数',
+        gpt61SolThresholdPolicy: '例如填写 500000。仅调整 GPT 6.1 Sol 的计费阈值，仍遵循长上下文计费开关；自定义区间定价及订阅账号豁免保持有效。',
+        invalidContextThreshold: '长上下文计费阈值须为 1 至 2147483647 的整数。',
         add: '添加模型价格'
       },
       voicePricing: {

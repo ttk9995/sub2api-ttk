@@ -1116,6 +1116,11 @@ export default {
         rateMultiplierHint: 'Only this model uses the entered multiplier; blank keeps the group/user multiplier.',
         longContext: 'Enable long-context tier pricing',
         longContextHint: 'When checked, channel intervals or official preset tiers apply. Otherwise the first tier is used unless the account explicitly enables long-context billing.',
+        gpt61SolThresholdTitle: 'GPT 6.1 Sol custom long-context billing threshold',
+        gpt61SolThresholdHint: 'Off uses the default 272000 tokens. When enabled, the surcharge applies strictly above the entered threshold.',
+        contextThresholdTokens: 'Total input and cache tokens',
+        gpt61SolThresholdPolicy: 'For example, enter 500000. Changes only the GPT 6.1 Sol billing threshold and follows the long-context billing switches. Custom pricing intervals and subscription exemptions still apply.',
+        invalidContextThreshold: 'The long-context billing threshold must be an integer from 1 to 2147483647.',
         add: 'Add model price'
       },
       voicePricing: {

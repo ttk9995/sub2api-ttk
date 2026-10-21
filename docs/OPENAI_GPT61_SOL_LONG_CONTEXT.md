@@ -1,6 +1,6 @@
 # GPT-6.1 Sol subscription long-context billing
 
-Verified on October 19, 2026.
+Billing policy updated on October 21, 2026.
 
 ## Official announcement and scope
 
@@ -21,23 +21,36 @@ The subscription exemption is not limited to requests below 500k.
 
 ## Deployment policy for API Key accounts
 
-The operator confirmed on October 19, 2026 that all upstreams in this
-deployment use subscriptions, including upstreams registered as API Key
-accounts. There is no official API business in this deployment. API Key
-is therefore an integration method, not evidence of official API billing.
+The operator reported on October 21 that many API Key upstreams have not
+adopted the 500k policy. GPT-6.1 Sol therefore defaults to a 272,000-token
+long-context billing threshold again. Both Go fallback cards and the
+bundled catalog use 272k; a remote default card with the previous 500k
+threshold is corrected to 272k as well.
 
-At the operator's request, the GPT-6.1 Sol default price card for API Key
-accounts now applies no model long-context surcharge through 500,000 input
-tokens inclusive. Above 500,000, existing input/cache multipliers (2x),
-output multipliers (1.5x), and account/group controls continue to apply.
-This 500k threshold is deployment policy; the announcement itself removes
-subscription long-context fees without specifying a new fee threshold.
+Each OpenAI or composite group can opt into its own token threshold using
+`gpt61_sol_long_context_enabled` and `gpt61_sol_long_context_threshold`.
+The override is off by default, with 500000 prefilled as an editable value.
+Turning it off preserves the saved value and restores the default ladder.
+Valid thresholds are integers from 1 through 2147483647. The threshold
+counts ordinary input, cache reads, and cache creation together; output
+tokens do not count toward it. The surcharge applies strictly above the
+threshold to the whole request, retaining input/cache 2x and output 1.5x.
 
-The bundled catalog and both Go fallback price cards use 500k. The billing
-policy also migrates GPT-6.1 Sol's legacy 272k default threshold to 500k
-after loading a remote catalog, so stale remote data cannot restore early
-surcharges. Disabled ladders, other explicit thresholds, channel/group
-custom prices, and other models retain their existing behavior.
+The override only changes GPT-6.1 Sol's existing model ladder, including
+recognized aliases. It does not enable long-context billing by itself.
+Group/account billing controls, OAuth/SetupToken exemptions, disabled
+ladders, administrator-defined channel intervals, and other models keep
+their behavior. Flat group/channel prices retain their configured rates
+and use the selected model threshold when their model ladder is active.
+Account cost statistics continue to follow account/channel cost policies
+independently of the group's customer billing threshold.
+
+The group fields are persisted by migration
+`247_group_gpt61_sol_long_context.sql`, copied when duplicating groups,
+and included in API key authentication snapshots. Snapshot version 25
+refreshes older cached group data. Saving a group invalidates its existing
+authentication cache. Model Plaza derives its displayed tiers from the
+same group policy used for billing.
 
 ## Sub2API behavior
 
@@ -50,16 +63,15 @@ custom prices, and other models retain their existing behavior.
 - Model long-context multipliers stay disabled for eligible subscription
   requests even when account or group long-context billing is enabled.
   Response-model repricing and Free Fast recalculation retain this policy.
-- API Key upstreams use the deployment's 500k default threshold described
-  above. Other models, administrator-defined pricing intervals, and
+- API Key upstreams use the 272k default or the enabled group threshold
+  described above. Other models, administrator-defined pricing intervals, and
   service-tier prices retain their existing behavior.
 - Ordinary input, cached input, cache creation, and output keep their base
   prices when the model's subscription exemption applies.
 
-OAuth/SetupToken requests were already exempt. The regression update
-extends boundary coverage around 272k and 500k, plus 900k, for OAuth,
-SetupToken, and API Key upstreams, with and without cached input. Price-card
-tests cover bundled, stale remote, and fallback sources, recognized model
-aliases, shared-card immutability, and preserved custom pricing. These are
-local unit tests using stub repositories; they do not measure a live
-account's upstream usage allowance.
+Regression tests cover default and custom threshold boundaries, cached
+input, service tiers, OAuth/SetupToken exemptions, gateway usage recording,
+model aliases, shared-card immutability, explicit intervals, Model Plaza
+tiers, group update semantics, and authentication cache round-trips.
+These are local unit tests using stub repositories; they do not measure
+a live account's upstream usage allowance.

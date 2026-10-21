@@ -195,6 +195,14 @@ func (Group) Fields() []ent.Field {
 		field.Bool("long_context_pricing_enabled").
 			Default(true).
 			Comment("是否按上下文长度应用模型阶梯价格；默认开启以保持官方/渠道长上下文价"),
+		field.Bool("gpt61_sol_long_context_enabled").
+			Default(false).
+			Comment("是否使用分组自定义 GPT-6.1 Sol 长上下文计费阈值"),
+		field.Int("gpt61_sol_long_context_threshold").
+			Default(500_000).
+			Min(1).
+			Max(2_147_483_647).
+			Comment("GPT-6.1 Sol 自定义长上下文计费阈值（input/cache token 总数，严格超过才加价）"),
 		field.JSON("model_pricing", json.RawMessage{}).
 			Optional().
 			SchemaType(map[string]string{dialect.Postgres: "jsonb"}).

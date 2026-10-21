@@ -808,6 +808,41 @@ func (_u *GroupUpdate) SetNillableLongContextPricingEnabled(v *bool) *GroupUpdat
 	return _u
 }
 
+// SetGpt61SolLongContextEnabled sets the "gpt61_sol_long_context_enabled" field.
+func (_u *GroupUpdate) SetGpt61SolLongContextEnabled(v bool) *GroupUpdate {
+	_u.mutation.SetGpt61SolLongContextEnabled(v)
+	return _u
+}
+
+// SetNillableGpt61SolLongContextEnabled sets the "gpt61_sol_long_context_enabled" field if the given value is not nil.
+func (_u *GroupUpdate) SetNillableGpt61SolLongContextEnabled(v *bool) *GroupUpdate {
+	if v != nil {
+		_u.SetGpt61SolLongContextEnabled(*v)
+	}
+	return _u
+}
+
+// SetGpt61SolLongContextThreshold sets the "gpt61_sol_long_context_threshold" field.
+func (_u *GroupUpdate) SetGpt61SolLongContextThreshold(v int) *GroupUpdate {
+	_u.mutation.ResetGpt61SolLongContextThreshold()
+	_u.mutation.SetGpt61SolLongContextThreshold(v)
+	return _u
+}
+
+// SetNillableGpt61SolLongContextThreshold sets the "gpt61_sol_long_context_threshold" field if the given value is not nil.
+func (_u *GroupUpdate) SetNillableGpt61SolLongContextThreshold(v *int) *GroupUpdate {
+	if v != nil {
+		_u.SetGpt61SolLongContextThreshold(*v)
+	}
+	return _u
+}
+
+// AddGpt61SolLongContextThreshold adds value to the "gpt61_sol_long_context_threshold" field.
+func (_u *GroupUpdate) AddGpt61SolLongContextThreshold(v int) *GroupUpdate {
+	_u.mutation.AddGpt61SolLongContextThreshold(v)
+	return _u
+}
+
 // SetModelPricing sets the "model_pricing" field.
 func (_u *GroupUpdate) SetModelPricing(v jsontext.Value) *GroupUpdate {
 	_u.mutation.SetModelPricing(v)
@@ -1539,6 +1574,11 @@ func (_u *GroupUpdate) check() error {
 			return &ValidationError{Name: "audio_stt_price_per_hour", err: fmt.Errorf(`ent: validator failed for field "Group.audio_stt_price_per_hour": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Gpt61SolLongContextThreshold(); ok {
+		if err := group.Gpt61SolLongContextThresholdValidator(v); err != nil {
+			return &ValidationError{Name: "gpt61_sol_long_context_threshold", err: fmt.Errorf(`ent: validator failed for field "Group.gpt61_sol_long_context_threshold": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.DefaultMappedModel(); ok {
 		if err := group.DefaultMappedModelValidator(v); err != nil {
 			return &ValidationError{Name: "default_mapped_model", err: fmt.Errorf(`ent: validator failed for field "Group.default_mapped_model": %w`, err)}
@@ -1802,6 +1842,15 @@ func (_u *GroupUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.LongContextPricingEnabled(); ok {
 		_spec.SetField(group.FieldLongContextPricingEnabled, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.Gpt61SolLongContextEnabled(); ok {
+		_spec.SetField(group.FieldGpt61SolLongContextEnabled, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.Gpt61SolLongContextThreshold(); ok {
+		_spec.SetField(group.FieldGpt61SolLongContextThreshold, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedGpt61SolLongContextThreshold(); ok {
+		_spec.AddField(group.FieldGpt61SolLongContextThreshold, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.ModelPricing(); ok {
 		_spec.SetField(group.FieldModelPricing, field.TypeJSON, value)
@@ -3011,6 +3060,41 @@ func (_u *GroupUpdateOne) SetNillableLongContextPricingEnabled(v *bool) *GroupUp
 	return _u
 }
 
+// SetGpt61SolLongContextEnabled sets the "gpt61_sol_long_context_enabled" field.
+func (_u *GroupUpdateOne) SetGpt61SolLongContextEnabled(v bool) *GroupUpdateOne {
+	_u.mutation.SetGpt61SolLongContextEnabled(v)
+	return _u
+}
+
+// SetNillableGpt61SolLongContextEnabled sets the "gpt61_sol_long_context_enabled" field if the given value is not nil.
+func (_u *GroupUpdateOne) SetNillableGpt61SolLongContextEnabled(v *bool) *GroupUpdateOne {
+	if v != nil {
+		_u.SetGpt61SolLongContextEnabled(*v)
+	}
+	return _u
+}
+
+// SetGpt61SolLongContextThreshold sets the "gpt61_sol_long_context_threshold" field.
+func (_u *GroupUpdateOne) SetGpt61SolLongContextThreshold(v int) *GroupUpdateOne {
+	_u.mutation.ResetGpt61SolLongContextThreshold()
+	_u.mutation.SetGpt61SolLongContextThreshold(v)
+	return _u
+}
+
+// SetNillableGpt61SolLongContextThreshold sets the "gpt61_sol_long_context_threshold" field if the given value is not nil.
+func (_u *GroupUpdateOne) SetNillableGpt61SolLongContextThreshold(v *int) *GroupUpdateOne {
+	if v != nil {
+		_u.SetGpt61SolLongContextThreshold(*v)
+	}
+	return _u
+}
+
+// AddGpt61SolLongContextThreshold adds value to the "gpt61_sol_long_context_threshold" field.
+func (_u *GroupUpdateOne) AddGpt61SolLongContextThreshold(v int) *GroupUpdateOne {
+	_u.mutation.AddGpt61SolLongContextThreshold(v)
+	return _u
+}
+
 // SetModelPricing sets the "model_pricing" field.
 func (_u *GroupUpdateOne) SetModelPricing(v jsontext.Value) *GroupUpdateOne {
 	_u.mutation.SetModelPricing(v)
@@ -3755,6 +3839,11 @@ func (_u *GroupUpdateOne) check() error {
 			return &ValidationError{Name: "audio_stt_price_per_hour", err: fmt.Errorf(`ent: validator failed for field "Group.audio_stt_price_per_hour": %w`, err)}
 		}
 	}
+	if v, ok := _u.mutation.Gpt61SolLongContextThreshold(); ok {
+		if err := group.Gpt61SolLongContextThresholdValidator(v); err != nil {
+			return &ValidationError{Name: "gpt61_sol_long_context_threshold", err: fmt.Errorf(`ent: validator failed for field "Group.gpt61_sol_long_context_threshold": %w`, err)}
+		}
+	}
 	if v, ok := _u.mutation.DefaultMappedModel(); ok {
 		if err := group.DefaultMappedModelValidator(v); err != nil {
 			return &ValidationError{Name: "default_mapped_model", err: fmt.Errorf(`ent: validator failed for field "Group.default_mapped_model": %w`, err)}
@@ -4035,6 +4124,15 @@ func (_u *GroupUpdateOne) sqlSave(ctx context.Context) (_node *Group, err error)
 	}
 	if value, ok := _u.mutation.LongContextPricingEnabled(); ok {
 		_spec.SetField(group.FieldLongContextPricingEnabled, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.Gpt61SolLongContextEnabled(); ok {
+		_spec.SetField(group.FieldGpt61SolLongContextEnabled, field.TypeBool, value)
+	}
+	if value, ok := _u.mutation.Gpt61SolLongContextThreshold(); ok {
+		_spec.SetField(group.FieldGpt61SolLongContextThreshold, field.TypeInt, value)
+	}
+	if value, ok := _u.mutation.AddedGpt61SolLongContextThreshold(); ok {
+		_spec.AddField(group.FieldGpt61SolLongContextThreshold, field.TypeInt, value)
 	}
 	if value, ok := _u.mutation.ModelPricing(); ok {
 		_spec.SetField(group.FieldModelPricing, field.TypeJSON, value)

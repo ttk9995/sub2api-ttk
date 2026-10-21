@@ -98,6 +98,10 @@ const (
 	FieldAudioSttPricePerHour = "audio_stt_price_per_hour"
 	// FieldLongContextPricingEnabled holds the string denoting the long_context_pricing_enabled field in the database.
 	FieldLongContextPricingEnabled = "long_context_pricing_enabled"
+	// FieldGpt61SolLongContextEnabled holds the string denoting the gpt61_sol_long_context_enabled field in the database.
+	FieldGpt61SolLongContextEnabled = "gpt61_sol_long_context_enabled"
+	// FieldGpt61SolLongContextThreshold holds the string denoting the gpt61_sol_long_context_threshold field in the database.
+	FieldGpt61SolLongContextThreshold = "gpt61_sol_long_context_threshold"
 	// FieldModelPricing holds the string denoting the model_pricing field in the database.
 	FieldModelPricing = "model_pricing"
 	// FieldClaudeCodeOnly holds the string denoting the claude_code_only field in the database.
@@ -266,6 +270,8 @@ var Columns = []string{
 	FieldAudioTtsPricePerMillionChars,
 	FieldAudioSttPricePerHour,
 	FieldLongContextPricingEnabled,
+	FieldGpt61SolLongContextEnabled,
+	FieldGpt61SolLongContextThreshold,
 	FieldModelPricing,
 	FieldClaudeCodeOnly,
 	FieldFallbackGroupID,
@@ -389,6 +395,12 @@ var (
 	AudioSttPricePerHourValidator func(float64) error
 	// DefaultLongContextPricingEnabled holds the default value on creation for the "long_context_pricing_enabled" field.
 	DefaultLongContextPricingEnabled bool
+	// DefaultGpt61SolLongContextEnabled holds the default value on creation for the "gpt61_sol_long_context_enabled" field.
+	DefaultGpt61SolLongContextEnabled bool
+	// DefaultGpt61SolLongContextThreshold holds the default value on creation for the "gpt61_sol_long_context_threshold" field.
+	DefaultGpt61SolLongContextThreshold int
+	// Gpt61SolLongContextThresholdValidator is a validator for the "gpt61_sol_long_context_threshold" field. It is called by the builders before save.
+	Gpt61SolLongContextThresholdValidator func(int) error
 	// DefaultClaudeCodeOnly holds the default value on creation for the "claude_code_only" field.
 	DefaultClaudeCodeOnly bool
 	// DefaultModelRoutingEnabled holds the default value on creation for the "model_routing_enabled" field.
@@ -642,6 +654,16 @@ func ByAudioSttPricePerHour(opts ...sql.OrderTermOption) OrderOption {
 // ByLongContextPricingEnabled orders the results by the long_context_pricing_enabled field.
 func ByLongContextPricingEnabled(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldLongContextPricingEnabled, opts...).ToFunc()
+}
+
+// ByGpt61SolLongContextEnabled orders the results by the gpt61_sol_long_context_enabled field.
+func ByGpt61SolLongContextEnabled(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldGpt61SolLongContextEnabled, opts...).ToFunc()
+}
+
+// ByGpt61SolLongContextThreshold orders the results by the gpt61_sol_long_context_threshold field.
+func ByGpt61SolLongContextThreshold(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldGpt61SolLongContextThreshold, opts...).ToFunc()
 }
 
 // ByClaudeCodeOnly orders the results by the claude_code_only field.

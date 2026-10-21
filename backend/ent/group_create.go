@@ -580,6 +580,34 @@ func (_c *GroupCreate) SetNillableLongContextPricingEnabled(v *bool) *GroupCreat
 	return _c
 }
 
+// SetGpt61SolLongContextEnabled sets the "gpt61_sol_long_context_enabled" field.
+func (_c *GroupCreate) SetGpt61SolLongContextEnabled(v bool) *GroupCreate {
+	_c.mutation.SetGpt61SolLongContextEnabled(v)
+	return _c
+}
+
+// SetNillableGpt61SolLongContextEnabled sets the "gpt61_sol_long_context_enabled" field if the given value is not nil.
+func (_c *GroupCreate) SetNillableGpt61SolLongContextEnabled(v *bool) *GroupCreate {
+	if v != nil {
+		_c.SetGpt61SolLongContextEnabled(*v)
+	}
+	return _c
+}
+
+// SetGpt61SolLongContextThreshold sets the "gpt61_sol_long_context_threshold" field.
+func (_c *GroupCreate) SetGpt61SolLongContextThreshold(v int) *GroupCreate {
+	_c.mutation.SetGpt61SolLongContextThreshold(v)
+	return _c
+}
+
+// SetNillableGpt61SolLongContextThreshold sets the "gpt61_sol_long_context_threshold" field if the given value is not nil.
+func (_c *GroupCreate) SetNillableGpt61SolLongContextThreshold(v *int) *GroupCreate {
+	if v != nil {
+		_c.SetGpt61SolLongContextThreshold(*v)
+	}
+	return _c
+}
+
 // SetModelPricing sets the "model_pricing" field.
 func (_c *GroupCreate) SetModelPricing(v jsontext.Value) *GroupCreate {
 	_c.mutation.SetModelPricing(v)
@@ -1133,6 +1161,14 @@ func (_c *GroupCreate) defaults() error {
 		v := group.DefaultLongContextPricingEnabled
 		_c.mutation.SetLongContextPricingEnabled(v)
 	}
+	if _, ok := _c.mutation.Gpt61SolLongContextEnabled(); !ok {
+		v := group.DefaultGpt61SolLongContextEnabled
+		_c.mutation.SetGpt61SolLongContextEnabled(v)
+	}
+	if _, ok := _c.mutation.Gpt61SolLongContextThreshold(); !ok {
+		v := group.DefaultGpt61SolLongContextThreshold
+		_c.mutation.SetGpt61SolLongContextThreshold(v)
+	}
 	if _, ok := _c.mutation.ClaudeCodeOnly(); !ok {
 		v := group.DefaultClaudeCodeOnly
 		_c.mutation.SetClaudeCodeOnly(v)
@@ -1349,6 +1385,17 @@ func (_c *GroupCreate) check() error {
 	}
 	if _, ok := _c.mutation.LongContextPricingEnabled(); !ok {
 		return &ValidationError{Name: "long_context_pricing_enabled", err: errors.New(`ent: missing required field "Group.long_context_pricing_enabled"`)}
+	}
+	if _, ok := _c.mutation.Gpt61SolLongContextEnabled(); !ok {
+		return &ValidationError{Name: "gpt61_sol_long_context_enabled", err: errors.New(`ent: missing required field "Group.gpt61_sol_long_context_enabled"`)}
+	}
+	if _, ok := _c.mutation.Gpt61SolLongContextThreshold(); !ok {
+		return &ValidationError{Name: "gpt61_sol_long_context_threshold", err: errors.New(`ent: missing required field "Group.gpt61_sol_long_context_threshold"`)}
+	}
+	if v, ok := _c.mutation.Gpt61SolLongContextThreshold(); ok {
+		if err := group.Gpt61SolLongContextThresholdValidator(v); err != nil {
+			return &ValidationError{Name: "gpt61_sol_long_context_threshold", err: fmt.Errorf(`ent: validator failed for field "Group.gpt61_sol_long_context_threshold": %w`, err)}
+		}
 	}
 	if _, ok := _c.mutation.ClaudeCodeOnly(); !ok {
 		return &ValidationError{Name: "claude_code_only", err: errors.New(`ent: missing required field "Group.claude_code_only"`)}
@@ -1621,6 +1668,14 @@ func (_c *GroupCreate) createSpec() (*Group, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.LongContextPricingEnabled(); ok {
 		_spec.SetField(group.FieldLongContextPricingEnabled, field.TypeBool, value)
 		_node.LongContextPricingEnabled = value
+	}
+	if value, ok := _c.mutation.Gpt61SolLongContextEnabled(); ok {
+		_spec.SetField(group.FieldGpt61SolLongContextEnabled, field.TypeBool, value)
+		_node.Gpt61SolLongContextEnabled = value
+	}
+	if value, ok := _c.mutation.Gpt61SolLongContextThreshold(); ok {
+		_spec.SetField(group.FieldGpt61SolLongContextThreshold, field.TypeInt, value)
+		_node.Gpt61SolLongContextThreshold = value
 	}
 	if value, ok := _c.mutation.ModelPricing(); ok {
 		_spec.SetField(group.FieldModelPricing, field.TypeJSON, value)
@@ -2575,6 +2630,36 @@ func (u *GroupUpsert) SetLongContextPricingEnabled(v bool) *GroupUpsert {
 // UpdateLongContextPricingEnabled sets the "long_context_pricing_enabled" field to the value that was provided on create.
 func (u *GroupUpsert) UpdateLongContextPricingEnabled() *GroupUpsert {
 	u.SetExcluded(group.FieldLongContextPricingEnabled)
+	return u
+}
+
+// SetGpt61SolLongContextEnabled sets the "gpt61_sol_long_context_enabled" field.
+func (u *GroupUpsert) SetGpt61SolLongContextEnabled(v bool) *GroupUpsert {
+	u.Set(group.FieldGpt61SolLongContextEnabled, v)
+	return u
+}
+
+// UpdateGpt61SolLongContextEnabled sets the "gpt61_sol_long_context_enabled" field to the value that was provided on create.
+func (u *GroupUpsert) UpdateGpt61SolLongContextEnabled() *GroupUpsert {
+	u.SetExcluded(group.FieldGpt61SolLongContextEnabled)
+	return u
+}
+
+// SetGpt61SolLongContextThreshold sets the "gpt61_sol_long_context_threshold" field.
+func (u *GroupUpsert) SetGpt61SolLongContextThreshold(v int) *GroupUpsert {
+	u.Set(group.FieldGpt61SolLongContextThreshold, v)
+	return u
+}
+
+// UpdateGpt61SolLongContextThreshold sets the "gpt61_sol_long_context_threshold" field to the value that was provided on create.
+func (u *GroupUpsert) UpdateGpt61SolLongContextThreshold() *GroupUpsert {
+	u.SetExcluded(group.FieldGpt61SolLongContextThreshold)
+	return u
+}
+
+// AddGpt61SolLongContextThreshold adds v to the "gpt61_sol_long_context_threshold" field.
+func (u *GroupUpsert) AddGpt61SolLongContextThreshold(v int) *GroupUpsert {
+	u.Add(group.FieldGpt61SolLongContextThreshold, v)
 	return u
 }
 
@@ -3807,6 +3892,41 @@ func (u *GroupUpsertOne) SetLongContextPricingEnabled(v bool) *GroupUpsertOne {
 func (u *GroupUpsertOne) UpdateLongContextPricingEnabled() *GroupUpsertOne {
 	return u.Update(func(s *GroupUpsert) {
 		s.UpdateLongContextPricingEnabled()
+	})
+}
+
+// SetGpt61SolLongContextEnabled sets the "gpt61_sol_long_context_enabled" field.
+func (u *GroupUpsertOne) SetGpt61SolLongContextEnabled(v bool) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetGpt61SolLongContextEnabled(v)
+	})
+}
+
+// UpdateGpt61SolLongContextEnabled sets the "gpt61_sol_long_context_enabled" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdateGpt61SolLongContextEnabled() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateGpt61SolLongContextEnabled()
+	})
+}
+
+// SetGpt61SolLongContextThreshold sets the "gpt61_sol_long_context_threshold" field.
+func (u *GroupUpsertOne) SetGpt61SolLongContextThreshold(v int) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetGpt61SolLongContextThreshold(v)
+	})
+}
+
+// AddGpt61SolLongContextThreshold adds v to the "gpt61_sol_long_context_threshold" field.
+func (u *GroupUpsertOne) AddGpt61SolLongContextThreshold(v int) *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.AddGpt61SolLongContextThreshold(v)
+	})
+}
+
+// UpdateGpt61SolLongContextThreshold sets the "gpt61_sol_long_context_threshold" field to the value that was provided on create.
+func (u *GroupUpsertOne) UpdateGpt61SolLongContextThreshold() *GroupUpsertOne {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateGpt61SolLongContextThreshold()
 	})
 }
 
@@ -5267,6 +5387,41 @@ func (u *GroupUpsertBulk) SetLongContextPricingEnabled(v bool) *GroupUpsertBulk 
 func (u *GroupUpsertBulk) UpdateLongContextPricingEnabled() *GroupUpsertBulk {
 	return u.Update(func(s *GroupUpsert) {
 		s.UpdateLongContextPricingEnabled()
+	})
+}
+
+// SetGpt61SolLongContextEnabled sets the "gpt61_sol_long_context_enabled" field.
+func (u *GroupUpsertBulk) SetGpt61SolLongContextEnabled(v bool) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetGpt61SolLongContextEnabled(v)
+	})
+}
+
+// UpdateGpt61SolLongContextEnabled sets the "gpt61_sol_long_context_enabled" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdateGpt61SolLongContextEnabled() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateGpt61SolLongContextEnabled()
+	})
+}
+
+// SetGpt61SolLongContextThreshold sets the "gpt61_sol_long_context_threshold" field.
+func (u *GroupUpsertBulk) SetGpt61SolLongContextThreshold(v int) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.SetGpt61SolLongContextThreshold(v)
+	})
+}
+
+// AddGpt61SolLongContextThreshold adds v to the "gpt61_sol_long_context_threshold" field.
+func (u *GroupUpsertBulk) AddGpt61SolLongContextThreshold(v int) *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.AddGpt61SolLongContextThreshold(v)
+	})
+}
+
+// UpdateGpt61SolLongContextThreshold sets the "gpt61_sol_long_context_threshold" field to the value that was provided on create.
+func (u *GroupUpsertBulk) UpdateGpt61SolLongContextThreshold() *GroupUpsertBulk {
+	return u.Update(func(s *GroupUpsert) {
+		s.UpdateGpt61SolLongContextThreshold()
 	})
 }
 

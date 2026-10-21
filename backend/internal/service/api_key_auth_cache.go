@@ -86,6 +86,8 @@ type APIKeyAuthGroupSnapshot struct {
 	AudioTTSPricePerMillionChars    *float64                      `json:"audio_tts_price_per_million_chars,omitempty"`
 	AudioSTTPricePerHour            *float64                      `json:"audio_stt_price_per_hour,omitempty"`
 	LongContextPricingEnabled       bool                          `json:"long_context_pricing_enabled"`
+	GPT61SolLongContextEnabled      bool                          `json:"gpt61_sol_long_context_enabled"`
+	GPT61SolLongContextThreshold    int                           `json:"gpt61_sol_long_context_threshold"`
 	ModelPricing                    []ChannelModelPricing         `json:"model_pricing,omitempty"`
 	ClaudeCodeOnly                  bool                          `json:"claude_code_only"`
 	FallbackGroupID                 *int64                        `json:"fallback_group_id,omitempty"`

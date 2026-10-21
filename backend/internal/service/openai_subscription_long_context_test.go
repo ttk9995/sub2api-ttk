@@ -84,7 +84,7 @@ func TestOpenAIGatewayServiceRecordUsage_GPT61SolSubscriptionLongContext(t *test
 								APIKey: apiKey, User: &User{ID: 2}, Account: account,
 							})
 							require.NoError(t, err)
-							wantLong := scenario.totalInput > 500000 && accountType == AccountTypeAPIKey && (accountEnabled || groupMode == "分组开启")
+							wantLong := scenario.totalInput > 272000 && accountType == AccountTypeAPIKey && (accountEnabled || groupMode == "分组开启")
 							inputFactor, outputFactor, tierFactor := 1.0, 1.0, 1.0
 							if wantLong {
 								inputFactor, outputFactor = 2, 1.5
@@ -108,7 +108,7 @@ func TestOpenAIGatewayServiceRecordUsage_GPT61SolSubscriptionLongContext(t *test
 							require.InDelta(t, wantTotal*1.1, userRepo.lastAmount, 1e-12)
 							if groupMode != "无分组" {
 								wantStats := (baseInputAndCacheCost + 0.02) * tierFactor
-								if scenario.totalInput > 500000 && accountType == AccountTypeAPIKey && accountEnabled {
+								if scenario.totalInput > 272000 && accountType == AccountTypeAPIKey && accountEnabled {
 									wantStats = (baseInputAndCacheCost*2 + 0.02*1.5) * tierFactor
 								}
 								require.NotNil(t, log.AccountStatsCost)
@@ -132,7 +132,7 @@ func TestOpenAIGatewayServiceRecordUsage_GPT61SolUsesCredentialAndUpstreamModel(
 		wantLong   bool
 	}{
 		{name: "客户别名映射到目标", model: "custom", upstream: "gpt-6.1-sol", parentType: AccountTypeOAuth, wantTotal: 0.62},
-		{name: "请求目标映射到旧模型", model: "gpt-6.1-sol", upstream: "gpt-6-sol", parentType: AccountTypeOAuth, wantTotal: 0.62},
+		{name: "请求目标映射到旧模型", model: "gpt-6.1-sol", upstream: "gpt-6-sol", parentType: AccountTypeOAuth, wantTotal: 1.23, wantLong: true},
 		{name: "其他订阅模型", model: "gpt-6-sol", parentType: AccountTypeOAuth, wantTotal: 1.23, wantLong: true},
 		{name: "订阅母账号", model: "gpt-6.1-sol", parentType: AccountTypeOAuth, wantTotal: 0.62},
 	} {
@@ -184,7 +184,7 @@ func TestCalculateCostUnified_ModelLongContextExemptionPreservesCustomIntervals(
 }
 
 func TestOpenAIGatewayServiceRecordUsage_GPT61SolLongContextBoundary(t *testing.T) {
-	// OAuth/SetupToken 保留豁免；API Key 接入的订阅上游在严格超过 500k 后进入高档。
+	// OAuth/SetupToken 保留豁免；API Key 上游默认在严格超过 272k 后进入高档。
 	for _, totalInput := range []int{271999, 272000, 272001, 499999, 500000, 500001, 900000} {
 		for _, accountType := range []string{AccountTypeOAuth, AccountTypeSetupToken, AccountTypeAPIKey} {
 			for _, withCache := range []bool{false, true} {
@@ -204,7 +204,7 @@ func TestOpenAIGatewayServiceRecordUsage_GPT61SolLongContextBoundary(t *testing.
 							Extra: map[string]any{openAILongContextBillingEnabledKey: true}},
 					})
 					require.NoError(t, err)
-					wantLong := accountType == AccountTypeAPIKey && totalInput > 500000
+					wantLong := accountType == AccountTypeAPIKey && totalInput > 272000
 					wantInput, wantOutput := float64(totalInput-cacheRead-cacheCreation)*2e-6, 0.01
 					wantCacheRead, wantCacheCreation := float64(cacheRead)*0.1e-6, float64(cacheCreation)*2.5e-6
 					if wantLong {

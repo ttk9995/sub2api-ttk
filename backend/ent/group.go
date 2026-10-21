@@ -102,6 +102,10 @@ type Group struct {
 	AudioSttPricePerHour *float64 `json:"audio_stt_price_per_hour,omitempty"`
 	// 是否按上下文长度应用模型阶梯价格；默认开启以保持官方/渠道长上下文价
 	LongContextPricingEnabled bool `json:"long_context_pricing_enabled,omitempty"`
+	// 是否使用分组自定义 GPT-6.1 Sol 长上下文计费阈值
+	Gpt61SolLongContextEnabled bool `json:"gpt61_sol_long_context_enabled,omitempty"`
+	// GPT-6.1 Sol 自定义长上下文计费阈值（input/cache token 总数，严格超过才加价）
+	Gpt61SolLongContextThreshold int `json:"gpt61_sol_long_context_threshold,omitempty"`
 	// 分组逐模型定价；优先级高于渠道和内置定价
 	ModelPricing jsontext.Value `json:"model_pricing,omitempty"`
 	// 是否仅允许 Claude Code 客户端
@@ -262,11 +266,11 @@ func (*Group) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case group.FieldI18n, group.FieldVideoModelPrices, group.FieldModelPricing, group.FieldModelRouting, group.FieldSupportedModelScopes, group.FieldMessagesDispatchModelConfig, group.FieldModelAllowlist, group.FieldCodexModelsManifestConfig, group.FieldReasoningEffortMappings:
 			values[i] = new([]byte)
-		case group.FieldPeakRateEnabled, group.FieldIsExclusive, group.FieldAllowImageGeneration, group.FieldAllowBatchImageGeneration, group.FieldImageRateIndependent, group.FieldVideoRateIndependent, group.FieldLongContextPricingEnabled, group.FieldClaudeCodeOnly, group.FieldModelRoutingEnabled, group.FieldMcpXMLInject, group.FieldAllowMessagesDispatch, group.FieldAllowLive, group.FieldForceOpenaiFast, group.FieldFreeOpenaiFast, group.FieldRequireOauthOnly, group.FieldRequirePrivacySet, group.FieldProfitControlEnabled:
+		case group.FieldPeakRateEnabled, group.FieldIsExclusive, group.FieldAllowImageGeneration, group.FieldAllowBatchImageGeneration, group.FieldImageRateIndependent, group.FieldVideoRateIndependent, group.FieldLongContextPricingEnabled, group.FieldGpt61SolLongContextEnabled, group.FieldClaudeCodeOnly, group.FieldModelRoutingEnabled, group.FieldMcpXMLInject, group.FieldAllowMessagesDispatch, group.FieldAllowLive, group.FieldForceOpenaiFast, group.FieldFreeOpenaiFast, group.FieldRequireOauthOnly, group.FieldRequirePrivacySet, group.FieldProfitControlEnabled:
 			values[i] = new(sql.NullBool)
 		case group.FieldRateMultiplier, group.FieldPeakRateMultiplier, group.FieldDailyLimitUsd, group.FieldWeeklyLimitUsd, group.FieldMonthlyLimitUsd, group.FieldImageRateMultiplier, group.FieldImagePrice1k, group.FieldImagePrice2k, group.FieldImagePrice4k, group.FieldBatchImageDiscountMultiplier, group.FieldBatchImageHoldMultiplier, group.FieldVideoRateMultiplier, group.FieldVideoPrice480p, group.FieldVideoPrice720p, group.FieldVideoPrice1080p, group.FieldWebSearchPricePerCall, group.FieldSearchPricePer1k, group.FieldAudioRealtimePricePerMin, group.FieldAudioTtsPricePerMillionChars, group.FieldAudioSttPricePerHour, group.FieldProfitMinMargin, group.FieldProfitSafetyBuffer:
 			values[i] = new(sql.NullFloat64)
-		case group.FieldID, group.FieldDefaultValidityDays, group.FieldFallbackGroupID, group.FieldFallbackGroupIDOnInvalidRequest, group.FieldSortOrder, group.FieldRpmLimit:
+		case group.FieldID, group.FieldDefaultValidityDays, group.FieldGpt61SolLongContextThreshold, group.FieldFallbackGroupID, group.FieldFallbackGroupIDOnInvalidRequest, group.FieldSortOrder, group.FieldRpmLimit:
 			values[i] = new(sql.NullInt64)
 		case group.FieldName, group.FieldDescription, group.FieldPeakStart, group.FieldPeakEnd, group.FieldStatus, group.FieldDuplicateOperationID, group.FieldPlatform, group.FieldSubscriptionType, group.FieldDefaultMappedModel, group.FieldMaxReasoningEffort, group.FieldMaxReasoningEffortOverLimit:
 			values[i] = new(sql.NullString)
@@ -559,6 +563,18 @@ func (_m *Group) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field long_context_pricing_enabled", values[i])
 			} else if value.Valid {
 				_m.LongContextPricingEnabled = value.Bool
+			}
+		case group.FieldGpt61SolLongContextEnabled:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field gpt61_sol_long_context_enabled", values[i])
+			} else if value.Valid {
+				_m.Gpt61SolLongContextEnabled = value.Bool
+			}
+		case group.FieldGpt61SolLongContextThreshold:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field gpt61_sol_long_context_threshold", values[i])
+			} else if value.Valid {
+				_m.Gpt61SolLongContextThreshold = int(value.Int64)
 			}
 		case group.FieldModelPricing:
 			if value, ok := values[i].(*[]byte); !ok {
@@ -964,6 +980,12 @@ func (_m *Group) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("long_context_pricing_enabled=")
 	builder.WriteString(fmt.Sprintf("%v", _m.LongContextPricingEnabled))
+	builder.WriteString(", ")
+	builder.WriteString("gpt61_sol_long_context_enabled=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Gpt61SolLongContextEnabled))
+	builder.WriteString(", ")
+	builder.WriteString("gpt61_sol_long_context_threshold=")
+	builder.WriteString(fmt.Sprintf("%v", _m.Gpt61SolLongContextThreshold))
 	builder.WriteString(", ")
 	builder.WriteString("model_pricing=")
 	builder.WriteString(fmt.Sprintf("%v", _m.ModelPricing))

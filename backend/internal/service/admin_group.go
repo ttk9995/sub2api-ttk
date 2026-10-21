@@ -401,6 +401,13 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 	}
 
 	platform := NormalizeGroupPlatform(input.Platform)
+	contextThreshold := 500_000
+	if input.GPT61SolLongContextThreshold != nil {
+		contextThreshold = *input.GPT61SolLongContextThreshold
+	}
+	if err := validateGPT61SolLongContextThreshold(contextThreshold); err != nil {
+		return nil, err
+	}
 	// 固定账号 manifest 配置：账号绑定发生在创建之后，创建时无法校验成员关系，
 	// 拒绝开启并在创建后的编辑里配置。
 	if normalizeCodexModelsManifestConfig(platform, input.CodexModelsManifestConfig).Enabled {
@@ -580,6 +587,8 @@ func (s *adminServiceImpl) CreateGroup(ctx context.Context, input *CreateGroupIn
 		WeeklyLimitUSD:                  weeklyLimit,
 		MonthlyLimitUSD:                 monthlyLimit,
 		LongContextPricingEnabled:       input.LongContextPricingEnabled,
+		GPT61SolLongContextEnabled:      input.GPT61SolLongContextEnabled && supportsGPT61SolLongContextPlatform(platform),
+		GPT61SolLongContextThreshold:    contextThreshold,
 		ModelPricing:                    modelPricing,
 		AllowImageGeneration:            allowImageGeneration,
 		AllowBatchImageGeneration:       allowBatchImageGeneration,
@@ -807,6 +816,16 @@ func (s *adminServiceImpl) UpdateGroup(ctx context.Context, id int64, input *Upd
 	if input.LongContextPricingEnabled != nil {
 		group.LongContextPricingEnabled = *input.LongContextPricingEnabled
 	}
+	if input.GPT61SolLongContextEnabled != nil {
+		group.GPT61SolLongContextEnabled = *input.GPT61SolLongContextEnabled
+	}
+	if input.GPT61SolLongContextThreshold != nil {
+		if err := validateGPT61SolLongContextThreshold(*input.GPT61SolLongContextThreshold); err != nil {
+			return nil, err
+		}
+		group.GPT61SolLongContextThreshold = *input.GPT61SolLongContextThreshold
+	}
+	group.GPT61SolLongContextEnabled = group.GPT61SolLongContextEnabled && supportsGPT61SolLongContextPlatform(group.Platform)
 	if input.ModelPricing != nil {
 		modelPricing, normalizeErr := normalizeGroupModelPricing(group.Platform, *input.ModelPricing)
 		if normalizeErr != nil {
